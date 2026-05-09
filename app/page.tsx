@@ -6,27 +6,22 @@ export default function HomePage() {
       {/* ── NAV ── */}
       <nav className="border-b border-gray-100 bg-white sticky top-0 z-50 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl font-black text-green-700">Grant</span>
-            <span className="text-2xl font-black text-gray-900">Crafter</span>
-          </div>
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2 group">
+            <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-green-700 text-white font-black text-lg select-none">G</div>
+            <div className="flex items-baseline gap-0.5">
+              <span className="text-xl font-black tracking-tight text-green-700">Grant</span>
+              <span className="text-xl font-black tracking-tight text-gray-900">Crafter</span>
+            </div>
+          </Link>
           <div className="flex items-center gap-4">
-            <Link
-              href="#how-it-works"
-              className="text-gray-600 hover:text-gray-900 font-medium hidden md:block"
-            >
+            <Link href="#how-it-works" className="text-gray-600 hover:text-gray-900 font-medium hidden md:block">
               How It Works
             </Link>
-            <Link
-              href="#pricing"
-              className="text-gray-600 hover:text-gray-900 font-medium hidden md:block"
-            >
+            <Link href="#pricing" className="text-gray-600 hover:text-gray-900 font-medium hidden md:block">
               Pricing
             </Link>
-            <Link
-              href="/signup"
-              className="bg-green-700 hover:bg-green-800 text-white font-bold px-5 py-2.5 rounded-lg transition-colors"
-            >
+            <Link href="/signup" className="bg-green-700 hover:bg-green-800 text-white font-bold px-5 py-2.5 rounded-lg transition-colors">
               Start Free Trial
             </Link>
           </div>
@@ -37,7 +32,7 @@ export default function HomePage() {
       <section className="bg-gradient-to-b from-green-50 to-white py-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-block bg-green-100 text-green-800 font-semibold text-sm px-4 py-1.5 rounded-full mb-6">
-            🏆 Trusted by 500+ small businesses & nonprofits
+            🔍 AI-powered grant research, delivered monthly
           </div>
           <h1 className="text-5xl md:text-6xl font-black text-gray-900 leading-tight mb-6">
             Stop Missing Grants
@@ -45,10 +40,9 @@ export default function HomePage() {
             <span className="text-green-700">Your Business Qualifies For</span>
           </h1>
           <p className="text-xl text-gray-600 mb-4 max-w-2xl mx-auto">
-            Every month, GrantCrafter&apos;s AI researches hundreds of federal,
-            state, and private grants — and delivers a personalized list of the
-            ones <strong>you actually qualify for</strong>, straight to your
-            inbox.
+            Every month, GrantCrafter&apos;s AI researches federal, state, local,
+            and private grants — and delivers a personalized list of opportunities
+            matched to <strong>your specific business profile</strong>.
           </p>
           <p className="text-lg text-gray-500 mb-10">
             No more endless Googling. No grant consultants charging $500/hour.
@@ -61,39 +55,14 @@ export default function HomePage() {
             >
               Get My First Grant Report →
             </Link>
-            <p className="text-sm text-gray-500">
-              $49/month · Cancel anytime · First report in 24 hours
-            </p>
           </div>
+          <p className="text-sm text-gray-500 mt-4">
+            $49/month · 7-day free trial · Cancel anytime
+          </p>
         </div>
       </section>
 
-      {/* ── SOCIAL PROOF BAR ── */}
-      <section className="bg-gray-900 py-6 px-4">
-        <div className="max-w-5xl mx-auto flex flex-wrap justify-center items-center gap-8 text-center">
-          <div className="text-white">
-            <div className="text-3xl font-black text-green-400">$2.4M+</div>
-            <div className="text-gray-400 text-sm">in grants found for members</div>
-          </div>
-          <div className="hidden md:block w-px h-10 bg-gray-700" />
-          <div className="text-white">
-            <div className="text-3xl font-black text-green-400">500+</div>
-            <div className="text-gray-400 text-sm">active members</div>
-          </div>
-          <div className="hidden md:block w-px h-10 bg-gray-700" />
-          <div className="text-white">
-            <div className="text-3xl font-black text-green-400">1,200+</div>
-            <div className="text-gray-400 text-sm">grant sources monitored monthly</div>
-          </div>
-          <div className="hidden md:block w-px h-10 bg-gray-700" />
-          <div className="text-white">
-            <div className="text-3xl font-black text-green-400">4.9★</div>
-            <div className="text-gray-400 text-sm">average member rating</div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── PAIN SECTION ── */}
+      {/* ── WHY GRANT RESEARCH IS HARD ── */}
       <section className="py-20 px-4">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-4xl font-black text-gray-900 text-center mb-4">
@@ -109,12 +78,12 @@ export default function HomePage() {
               {
                 emoji: "⏱️",
                 title: "Hours of research",
-                body: "Finding and vetting grants takes 10-20 hours per month that you simply don't have.",
+                body: "Finding and vetting grants takes 10–20 hours per month that you simply don't have.",
               },
               {
                 emoji: "😤",
                 title: "Generic results",
-                body: "Google searches return outdated lists that don't match your business type, location, or eligibility.",
+                body: "Search results return outdated lists that don't match your business type, location, or eligibility.",
               },
               {
                 emoji: "💸",
@@ -122,14 +91,9 @@ export default function HomePage() {
                 body: "Grant windows close fast. By the time most people find an opportunity, it's already gone.",
               },
             ].map((item) => (
-              <div
-                key={item.title}
-                className="bg-red-50 border border-red-100 rounded-2xl p-6"
-              >
+              <div key={item.title} className="bg-red-50 border border-red-100 rounded-2xl p-6">
                 <div className="text-4xl mb-3">{item.emoji}</div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  {item.title}
-                </h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">{item.title}</h3>
                 <p className="text-gray-600">{item.body}</p>
               </div>
             ))}
@@ -152,37 +116,29 @@ export default function HomePage() {
                 step: "1",
                 title: "Tell us about your business",
                 body: "Answer a quick 5-minute profile: business type, industry, location, size, and any special qualifiers (woman-owned, minority-owned, veteran-owned, etc.).",
-                color: "bg-green-700",
               },
               {
                 step: "2",
                 title: "AI researches your opportunities",
-                body: "Our AI scans federal grants (Grants.gov, SBA, USDA), state programs, local economic development funds, and hundreds of private foundations — cross-referenced against your profile.",
-                color: "bg-green-700",
+                body: "Our AI scans federal grant programs (Grants.gov, SBA, USDA), state economic development programs, local funds, and private foundations — cross-referenced against your profile.",
               },
               {
                 step: "3",
                 title: "Receive your personalized report",
-                body: "On the 1st of each month, you get a curated list of 10-20 grants you qualify for — with amounts, deadlines, requirements, and direct application links.",
-                color: "bg-green-700",
+                body: "On the 1st of each month, you get a curated list of grants you may qualify for — with amounts, deadlines, requirements, and direct application links.",
               },
               {
                 step: "4",
-                title: "Apply. Get funded.",
-                body: "Use our report to prioritize which grants to apply for. Members report spending 80% less time on grant research.",
-                color: "bg-green-700",
+                title: "Apply directly",
+                body: "Use your report to prioritize which grants to apply for. Every opportunity links directly to the official source.",
               },
             ].map((item) => (
               <div key={item.step} className="flex gap-6 items-start">
-                <div
-                  className={`${item.color} text-white font-black text-xl w-12 h-12 rounded-full flex items-center justify-center shrink-0`}
-                >
+                <div className="bg-green-700 text-white font-black text-xl w-12 h-12 rounded-full flex items-center justify-center shrink-0">
                   {item.step}
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-1">
-                    {item.title}
-                  </h3>
+                  <h3 className="text-xl font-bold text-gray-900 mb-1">{item.title}</h3>
                   <p className="text-gray-600">{item.body}</p>
                 </div>
               </div>
@@ -197,17 +153,17 @@ export default function HomePage() {
           <h2 className="text-4xl font-black text-gray-900 text-center mb-4">
             What Your Monthly Report Looks Like
           </h2>
-          <p className="text-xl text-gray-600 text-center mb-12">
-            Real grants. Real amounts. Real deadlines. Tailored to you.
+          <p className="text-xl text-gray-600 text-center mb-4">
+            Real grant programs. Real amounts. Real deadlines. Matched to your profile.
+          </p>
+          <p className="text-sm text-gray-400 text-center mb-12 italic">
+            Sample report below is illustrative. Actual reports are generated based on your specific business profile and current grant availability.
           </p>
           <div className="bg-white border-2 border-gray-200 rounded-2xl overflow-hidden shadow-lg">
             <div className="bg-green-700 text-white px-6 py-4">
-              <div className="font-bold text-lg">
-                GrantCrafter — May 2026 Report
-              </div>
+              <div className="font-bold text-lg">GrantCrafter — Sample Monthly Report</div>
               <div className="text-green-200 text-sm">
-                Prepared for: Midwest Bakery LLC · Cincinnati, OH · Food &
-                Beverage · Woman-Owned
+                Illustrative example · Food &amp; Beverage · Cincinnati, OH · Woman-Owned
               </div>
             </div>
             <div className="divide-y divide-gray-100">
@@ -215,123 +171,65 @@ export default function HomePage() {
                 {
                   name: "SBA Small Business Innovation Research (SBIR) Program",
                   amount: "Up to $275,000",
-                  deadline: "June 15, 2026",
+                  deadline: "Varies by agency",
                   type: "Federal",
-                  match: "98%",
                 },
                 {
                   name: "USDA Rural Business Development Grant",
                   amount: "$10,000 – $500,000",
-                  deadline: "July 1, 2026",
+                  deadline: "Annual — check Grants.gov",
                   type: "Federal",
-                  match: "91%",
                 },
                 {
-                  name: "Ohio Women's Business Center Grant",
-                  amount: "Up to $25,000",
+                  name: "Ohio Women's Business Center Programs",
+                  amount: "Varies by program",
                   deadline: "Rolling",
                   type: "State",
-                  match: "96%",
                 },
                 {
-                  name: "Cincinnati Small Business Resiliency Fund",
-                  amount: "$5,000 – $30,000",
-                  deadline: "May 31, 2026",
+                  name: "Local Economic Development Funds",
+                  amount: "Varies by city/county",
+                  deadline: "Check local EDA",
                   type: "Local",
-                  match: "89%",
                 },
               ].map((grant) => (
-                <div
-                  key={grant.name}
-                  className="px-6 py-4 flex items-start gap-4"
-                >
+                <div key={grant.name} className="px-6 py-4 flex items-start gap-4">
                   <div className="shrink-0">
-                    <span
-                      className={`text-xs font-bold px-2 py-1 rounded ${
-                        grant.type === "Federal"
-                          ? "bg-blue-100 text-blue-700"
-                          : grant.type === "State"
-                          ? "bg-purple-100 text-purple-700"
-                          : "bg-orange-100 text-orange-700"
-                      }`}
-                    >
+                    <span className={`text-xs font-bold px-2 py-1 rounded ${
+                      grant.type === "Federal" ? "bg-blue-100 text-blue-700" :
+                      grant.type === "State" ? "bg-purple-100 text-purple-700" :
+                      "bg-orange-100 text-orange-700"
+                    }`}>
                       {grant.type}
                     </span>
                   </div>
                   <div className="flex-1">
-                    <div className="font-semibold text-gray-900">
-                      {grant.name}
-                    </div>
+                    <div className="font-semibold text-gray-900">{grant.name}</div>
                     <div className="text-sm text-gray-500 mt-0.5">
-                      Award: <strong>{grant.amount}</strong> · Deadline:{" "}
-                      <strong>{grant.deadline}</strong>
-                    </div>
-                  </div>
-                  <div className="shrink-0 text-right">
-                    <div className="text-green-700 font-black text-sm">
-                      {grant.match} match
+                      Award: <strong>{grant.amount}</strong> · Deadline: <strong>{grant.deadline}</strong>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
             <div className="bg-gray-50 px-6 py-3 text-sm text-gray-500 text-center">
-              + 14 more opportunities in the full report
+              Your actual report will include programs specific to your business profile, location, and qualifiers.
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* ── TESTIMONIALS ── */}
-      <section className="bg-gray-50 py-20 px-4">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-4xl font-black text-gray-900 text-center mb-12">
-            What Members Are Saying
-          </h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              {
-                quote:
-                  "I had no idea there were local grants available for my restaurant. GrantCrafter found three in the first month — I applied to two and got one.",
-                name: "Maria T.",
-                biz: "Restaurant Owner, Texas",
-              },
-              {
-                quote:
-                  "As a nonprofit director, grant research was eating 15 hours a month. Now I spend 30 minutes reviewing what GrantCrafter sends me. Game changer.",
-                name: "David R.",
-                biz: "Nonprofit Director, Ohio",
-              },
-              {
-                quote:
-                  "I'm a veteran-owned landscaping company. GrantCrafter found veteran-specific programs I never would have found on my own. Worth every dollar.",
-                name: "James K.",
-                biz: "Landscaping Business, Georgia",
-              },
-            ].map((t) => (
-              <div
-                key={t.name}
-                className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
-              >
-                <div className="text-yellow-400 text-xl mb-3">★★★★★</div>
-                <p className="text-gray-700 mb-4 italic">&ldquo;{t.quote}&rdquo;</p>
-                <div className="font-bold text-gray-900">{t.name}</div>
-                <div className="text-sm text-gray-500">{t.biz}</div>
-              </div>
-            ))}
-          </div>
+          <p className="text-xs text-gray-400 text-center mt-4">
+            GrantCrafter identifies grant opportunities for informational purposes only. Grant awards are determined solely by the granting organization. Results vary based on your business profile and grant availability.
+          </p>
         </div>
       </section>
 
       {/* ── WHO IT'S FOR ── */}
-      <section className="py-20 px-4">
+      <section className="bg-gray-50 py-20 px-4">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-4xl font-black text-gray-900 text-center mb-4">
             Built For You If You Are...
           </h2>
           <p className="text-xl text-gray-600 text-center mb-12">
-            GrantCrafter works for any business or organization that needs
-            funding.
+            GrantCrafter works for any business or organization seeking funding.
           </p>
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
             {[
@@ -348,10 +246,7 @@ export default function HomePage() {
               "Creative businesses & artists",
               "Community organizations",
             ].map((item) => (
-              <div
-                key={item}
-                className="flex items-center gap-3 bg-green-50 rounded-xl p-4"
-              >
+              <div key={item} className="flex items-center gap-3 bg-green-50 rounded-xl p-4">
                 <span className="text-green-700 text-lg font-bold">✓</span>
                 <span className="text-gray-800 font-medium">{item}</span>
               </div>
@@ -363,27 +258,21 @@ export default function HomePage() {
       {/* ── PRICING ── */}
       <section id="pricing" className="bg-green-700 py-20 px-4">
         <div className="max-w-lg mx-auto text-center">
-          <h2 className="text-4xl font-black text-white mb-4">
-            Simple, Transparent Pricing
-          </h2>
-          <p className="text-green-200 text-lg mb-10">
-            One plan. Everything included. No hidden fees.
-          </p>
+          <h2 className="text-4xl font-black text-white mb-4">Simple, Transparent Pricing</h2>
+          <p className="text-green-200 text-lg mb-10">One plan. Everything included. No hidden fees.</p>
           <div className="bg-white rounded-3xl p-8 shadow-2xl">
-            <div className="text-green-700 font-black text-2xl mb-1">
-              GrantCrafter Pro
-            </div>
+            <div className="text-green-700 font-black text-2xl mb-1">GrantCrafter Pro</div>
             <div className="text-6xl font-black text-gray-900 mb-1">$49</div>
             <div className="text-gray-500 mb-8">per month · cancel anytime</div>
             <ul className="text-left space-y-3 mb-8">
               {[
-                "Monthly personalized grant report",
-                "10–20 curated opportunities per month",
-                "Federal, state, local & private grants",
+                "Monthly personalized grant research report",
+                "Federal, state, local & private grant sources",
+                "Matched to your business profile & qualifiers",
                 "Direct application links & deadlines",
-                "Profile-matched to your qualifiers",
                 "Email delivery on the 1st of every month",
                 "Members-only dashboard with past reports",
+                "7-day free trial",
                 "Cancel anytime — no contracts",
               ].map((feature) => (
                 <li key={feature} className="flex items-center gap-3">
@@ -399,8 +288,7 @@ export default function HomePage() {
               Start Your Free Trial →
             </Link>
             <p className="text-sm text-gray-400 mt-4">
-              First report delivered within 24 hours of signup. 7-day money-back
-              guarantee.
+              First report delivered within 24 hours of completing your profile. 7-day money-back guarantee on your first charge.
             </p>
           </div>
         </div>
@@ -416,19 +304,19 @@ export default function HomePage() {
             {[
               {
                 q: "Does GrantCrafter guarantee I'll get a grant?",
-                a: "No. GrantCrafter is a research and discovery tool. We identify grants you appear to qualify for based on your profile — but grant awards are always determined by the granting organization. Think of us as your dedicated grant research assistant.",
+                a: "No. GrantCrafter is a research and discovery tool. We identify grants you may qualify for based on your profile — but all grant awards are determined solely by the granting organization. We never guarantee eligibility or award outcomes.",
               },
               {
                 q: "Are these real grants?",
-                a: "Yes. We source from Grants.gov, SBA.gov, USDA programs, state economic development agencies, and vetted private foundations. Every opportunity listed includes the official source and application link.",
+                a: "Yes. We source from Grants.gov, SBA.gov, USDA programs, state economic development agencies, and vetted private foundations. Every opportunity includes the official source and application link so you can verify independently.",
               },
               {
                 q: "How is this different from just Googling grants?",
-                a: "Google gives you generic lists. GrantCrafter cross-references your specific business profile — type, industry, location, size, ownership qualifiers — against hundreds of sources to find grants you actually match. It also tracks deadlines month-to-month so you never miss a window.",
+                a: "Generic searches return outdated, one-size-fits-all lists. GrantCrafter cross-references your specific business profile — type, industry, location, size, ownership qualifiers — to surface programs more likely to match your situation. We also track new opportunities each month.",
               },
               {
-                q: "What if no grants come up for my business?",
-                a: "We offer a 7-day money-back guarantee. If your first report doesn't surface meaningful opportunities, email us and we'll refund you in full.",
+                q: "What if the grants in my report don't fit my business?",
+                a: "We offer a 7-day money-back guarantee. If your first report doesn't surface meaningful opportunities, email us at support@grantcrafter.com and we'll refund your first charge in full.",
               },
               {
                 q: "How do I cancel?",
@@ -436,16 +324,11 @@ export default function HomePage() {
               },
               {
                 q: "Do you help me write the grant application?",
-                a: "Not currently. GrantCrafter is a discovery tool — we find the opportunities, you apply. We may add application assistance in the future.",
+                a: "Not currently. GrantCrafter is a discovery and research tool — we identify opportunities, you apply directly through the granting organization.",
               },
             ].map((item) => (
-              <div
-                key={item.q}
-                className="border-b border-gray-200 pb-6"
-              >
-                <h3 className="text-lg font-bold text-gray-900 mb-2">
-                  {item.q}
-                </h3>
+              <div key={item.q} className="border-b border-gray-200 pb-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-2">{item.q}</h3>
                 <p className="text-gray-600">{item.a}</p>
               </div>
             ))}
@@ -460,8 +343,7 @@ export default function HomePage() {
             There Are Grants With Your Name On Them.
           </h2>
           <p className="text-gray-400 text-xl mb-10">
-            Every month you wait is another month of missed opportunities. Your
-            first report is ready in 24 hours.
+            Stop leaving funding on the table. Your first personalized report is ready within 24 hours of signup.
           </p>
           <Link
             href="/signup"
@@ -470,7 +352,7 @@ export default function HomePage() {
             Get My First Grant Report →
           </Link>
           <p className="text-gray-500 text-sm mt-4">
-            $49/month · 7-day money-back guarantee · Cancel anytime
+            $49/month · 7-day free trial · 7-day money-back guarantee · Cancel anytime
           </p>
         </div>
       </section>
@@ -479,31 +361,20 @@ export default function HomePage() {
       <footer className="border-t border-gray-200 py-10 px-4">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2">
-            <span className="text-xl font-black text-green-700">Grant</span>
-            <span className="text-xl font-black text-gray-900">Crafter</span>
+            <div className="flex items-center justify-center w-7 h-7 rounded-md bg-green-700 text-white font-black text-sm">G</div>
+            <span className="text-lg font-black text-green-700">Grant</span>
+            <span className="text-lg font-black text-gray-900">Crafter</span>
           </div>
           <div className="flex gap-6 text-sm text-gray-500">
-            <Link href="/privacy" className="hover:text-gray-900">
-              Privacy Policy
-            </Link>
-            <Link href="/terms" className="hover:text-gray-900">
-              Terms of Service
-            </Link>
-            <Link href="/disclaimer" className="hover:text-gray-900">
-              Disclaimer
-            </Link>
-            <Link href="mailto:support@grantcrafter.com" className="hover:text-gray-900">
-              Contact
-            </Link>
+            <Link href="/privacy" className="hover:text-gray-900">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-gray-900">Terms of Service</Link>
+            <Link href="/disclaimer" className="hover:text-gray-900">Disclaimer</Link>
+            <Link href="mailto:support@grantcrafter.com" className="hover:text-gray-900">Contact</Link>
           </div>
-          <div className="text-sm text-gray-400">
-            © {new Date().getFullYear()} GrantCrafter. All rights reserved.
-          </div>
+          <div className="text-sm text-gray-400">© {new Date().getFullYear()} Warehouse Web Co. All rights reserved.</div>
         </div>
         <div className="max-w-6xl mx-auto mt-6 text-center text-xs text-gray-400">
-          GrantCrafter is a grant research and discovery tool. We identify grant opportunities based on your business profile. 
-          We do not guarantee grant awards, which are determined solely by the granting organization. 
-          Information provided is for educational and informational purposes only.
+          GrantCrafter is a grant research and discovery service operated by Warehouse Web Co. Information provided is for educational and informational purposes only. GrantCrafter does not guarantee grant eligibility or award outcomes. Grant decisions are made solely by each granting organization.
         </div>
       </footer>
     </main>
