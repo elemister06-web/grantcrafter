@@ -63,9 +63,13 @@ export async function POST(req: NextRequest) {
         const sub = event.data.object as Stripe.Subscription;
         const customerId = sub.customer as string;
 
+        // Mark as canceled and record cancellation time for recovery email cron
         await supabaseAdmin
           .from("users")
-          .update({ subscription_status: "canceled" })
+          .update({
+            subscription_status: "canceled",
+            canceled_at: new Date().toISOString(),
+          })
           .eq("stripe_customer_id", customerId);
         break;
       }

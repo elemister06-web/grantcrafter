@@ -3,6 +3,22 @@
     {
       "path": "/api/cron/monthly-reports",
       "schedule": "0 13 1 * *"
+    },
+    {
+      "path": "/api/cron/welcome-sequence",
+      "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/cron/monthly-reminder",
+      "schedule": "0 14 28 * *"
+    },
+    {
+      "path": "/api/cron/anniversary",
+      "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/cron/cancellation-recovery",
+      "schedule": "0 * * * *"
     }
   ]
 }
