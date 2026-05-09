@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import Anthropic from "@anthropic-ai/sdk";
 import { Resend } from "resend";
 import { buildGrantPrompt, BusinessProfile } from "@/lib/prompt";
+import { trackUsage } from "@/lib/track-usage";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 const resend = new Resend(process.env.RESEND_API_KEY!);
@@ -85,6 +86,9 @@ async function generateFirstReport(userId: string, profile: BusinessProfile, ema
 
     const reportContent =
       message.content[0].type === "text" ? message.content[0].text : "";
+
+    // Track Claude usage for P&L
+    trackUsage("grant-report-onboarding", message.usage as unknown as Parameters<typeof trackUsage>[1]).catch(() => {});
 
     // Save to database
     await supabaseAdmin.from("grant_reports").insert({

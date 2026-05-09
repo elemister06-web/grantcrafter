@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { supabaseAdmin } from "@/lib/supabase";
 import { buildGrantPrompt, BusinessProfile } from "@/lib/prompt";
+import { trackUsage } from "@/lib/track-usage";
 import { Resend } from "resend";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
@@ -59,6 +60,9 @@ export async function POST(req: NextRequest) {
 
     const reportContent =
       message.content[0].type === "text" ? message.content[0].text : "";
+
+    // Track Claude usage for P&L
+    trackUsage("grant-report", message.usage as unknown as Parameters<typeof trackUsage>[1]).catch(() => {});
 
     // Save to database
     const { data: report, error: reportError } = await supabaseAdmin
