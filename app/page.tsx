@@ -407,7 +407,7 @@ export default function HomePage() {
       </section>
 
       {/* ── FAQ ── */}
-      <section className="py-20 px-4">
+      <section id="faq" className="py-20 px-4">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-4xl font-black text-gray-900 text-center mb-12">
             Frequently Asked Questions
