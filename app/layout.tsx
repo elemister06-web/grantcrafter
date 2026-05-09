@@ -25,8 +25,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* Google Ads Conversion Tag — add your actual tag ID */}
-        {/* <script async src="https://www.googletagmanager.com/gtag/js?id=AW-XXXXXXXXX"></script> */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18151623677"></script>
+        <script dangerouslySetInnerHTML={{ __html: `
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'AW-18151623677');
+        `}} />
       </head>
       <body>{children}</body>
     </html>

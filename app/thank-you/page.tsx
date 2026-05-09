@@ -1,8 +1,12 @@
 import Link from "next/link";
+import Script from "next/script";
 
 export default function ThankYouPage() {
   return (
     <main className="min-h-screen bg-green-50 flex flex-col items-center justify-center px-4">
+      <Script id="gtag-conversion" strategy="afterInteractive">
+        {`gtag('event', 'conversion', { 'send_to': 'AW-18151623677' });`}
+      </Script>
       <div className="max-w-lg w-full text-center">
         <Link href="/" className="flex items-center justify-center gap-1 mb-10">
           <span className="text-2xl font-black text-green-700">Grant</span>
