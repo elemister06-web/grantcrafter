@@ -20,47 +20,32 @@ export default function Logo({ size = "md", href = "/" }: LogoProps) {
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
     >
+      {/* Warehouse main roof — wide flat industrial style */}
+      <path d="M2 20 L4 14 L40 14 L42 20 Z" fill="#166534" />
+      {/* Roof ridge cap */}
+      <rect x="4" y="13" width="36" height="3" rx="1" fill="#15803d" />
+      {/* Rooftop vents — industrial detail */}
+      <rect x="10" y="10" width="4" height="4" rx="0.5" fill="#166534" />
+      <rect x="20" y="9" width="4" height="5" rx="0.5" fill="#166534" />
+      <rect x="30" y="10" width="4" height="4" rx="0.5" fill="#166534" />
       {/* Warehouse body */}
-      <rect x="4" y="22" width="36" height="18" rx="1.5" fill="#15803d" />
-      {/* Warehouse roof — angled like a classic warehouse */}
-      <path d="M2 23 L22 10 L42 23" stroke="#15803d" strokeWidth="2.5" strokeLinejoin="round" fill="none" />
-      {/* Loading dock door */}
-      <rect x="16" y="30" width="12" height="10" rx="1" fill="white" opacity="0.9" />
-      {/* Door lines — detail */}
-      <line x1="22" y1="30" x2="22" y2="40" stroke="#15803d" strokeWidth="0.8" opacity="0.5" />
-      <line x1="16" y1="35" x2="28" y2="35" stroke="#15803d" strokeWidth="0.8" opacity="0.5" />
-
-      {/* DMB Fire Dancer — stylized figure rising from the roofline */}
-      {/* Head */}
-      <circle cx="22" cy="5.5" r="2" fill="#f59e0b" />
-      {/* Body — arched, dancing feel */}
-      <path
-        d="M22 7.5 C20 9 19 11 20 13"
-        stroke="#f59e0b" strokeWidth="1.6" strokeLinecap="round" fill="none"
-      />
-      {/* Left arm — raised, flame-like */}
-      <path
-        d="M21 9.5 C18 8 16 6 17 4 C17.5 5.5 19 6 20 8"
-        stroke="#f59e0b" strokeWidth="1.4" strokeLinecap="round" fill="none"
-      />
-      {/* Right arm — raised other side */}
-      <path
-        d="M22 9.5 C25 8 27 6 26 4 C25.5 5.5 24 6 23 8"
-        stroke="#f59e0b" strokeWidth="1.4" strokeLinecap="round" fill="none"
-      />
-      {/* Left leg — spread, dancer pose */}
-      <path
-        d="M20 13 C18.5 15.5 17 17 15.5 17.5"
-        stroke="#f59e0b" strokeWidth="1.4" strokeLinecap="round" fill="none"
-      />
-      {/* Right leg */}
-      <path
-        d="M20 13 C21 15.5 22.5 17 24 17"
-        stroke="#f59e0b" strokeWidth="1.4" strokeLinecap="round" fill="none"
-      />
-      {/* Small windows — warehouse detail */}
-      <rect x="7" y="26" width="5" height="4" rx="0.5" fill="white" opacity="0.6" />
-      <rect x="32" y="26" width="5" height="4" rx="0.5" fill="white" opacity="0.6" />
+      <rect x="2" y="20" width="40" height="22" rx="1" fill="#15803d" />
+      {/* Large loading dock door — center */}
+      <rect x="14" y="28" width="16" height="14" rx="1.5" fill="white" opacity="0.95" />
+      {/* Dock door horizontal panels */}
+      <line x1="14" y1="32" x2="30" y2="32" stroke="#d1fae5" strokeWidth="1" />
+      <line x1="14" y1="36" x2="30" y2="36" stroke="#d1fae5" strokeWidth="1" />
+      <line x1="14" y1="40" x2="30" y2="40" stroke="#d1fae5" strokeWidth="1" />
+      {/* Dock bumper */}
+      <rect x="13" y="40" width="18" height="2" rx="0.5" fill="#bbf7d0" opacity="0.6" />
+      {/* Left window */}
+      <rect x="5" y="24" width="6" height="5" rx="0.5" fill="white" opacity="0.7" />
+      <line x1="8" y1="24" x2="8" y2="29" stroke="#d1fae5" strokeWidth="0.8" />
+      {/* Right window */}
+      <rect x="33" y="24" width="6" height="5" rx="0.5" fill="white" opacity="0.7" />
+      <line x1="36" y1="24" x2="36" y2="29" stroke="#d1fae5" strokeWidth="0.8" />
+      {/* Ground line */}
+      <rect x="0" y="41" width="44" height="2" rx="1" fill="#166534" opacity="0.5" />
     </svg>
   );
 
