@@ -8,7 +8,7 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-green-700 text-white font-black text-lg select-none">G</div>
+            <div className="flex items-center justify-center w-11 h-11 rounded-lg bg-green-700 text-white font-black text-2xl select-none">G</div>
             <div className="flex items-baseline gap-0.5">
               <span className="text-xl font-black tracking-tight text-green-700">Grant</span>
               <span className="text-xl font-black tracking-tight text-gray-900">Crafter</span>
@@ -361,7 +361,7 @@ export default function HomePage() {
       <footer className="border-t border-gray-200 py-10 px-4">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-7 h-7 rounded-md bg-green-700 text-white font-black text-sm">G</div>
+            <div className="flex items-center justify-center w-9 h-9 rounded-md bg-green-700 text-white font-black text-lg">G</div>
             <span className="text-lg font-black text-green-700">Grant</span>
             <span className="text-lg font-black text-gray-900">Crafter</span>
           </div>
