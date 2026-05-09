@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Logo from "@/components/Logo";
 
 export default function HomePage() {
   return (
@@ -6,14 +7,7 @@ export default function HomePage() {
       {/* ── NAV ── */}
       <nav className="border-b border-gray-100 bg-white sticky top-0 z-50 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="flex items-center justify-center w-11 h-11 rounded-lg bg-green-700 text-white font-black text-2xl select-none">G</div>
-            <div className="flex items-baseline gap-0.5">
-              <span className="text-xl font-black tracking-tight text-green-700">Grant</span>
-              <span className="text-xl font-black tracking-tight text-gray-900">Crafter</span>
-            </div>
-          </Link>
+          <Logo />
           <div className="flex items-center gap-4">
             <Link href="#how-it-works" className="text-gray-600 hover:text-gray-900 font-medium hidden md:block">
               How It Works
@@ -360,11 +354,7 @@ export default function HomePage() {
       {/* ── FOOTER ── */}
       <footer className="border-t border-gray-200 py-10 px-4">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-9 h-9 rounded-md bg-green-700 text-white font-black text-lg">G</div>
-            <span className="text-lg font-black text-green-700">Grant</span>
-            <span className="text-lg font-black text-gray-900">Crafter</span>
-          </div>
+          <Logo size="sm" href="/" />
           <div className="flex gap-6 text-sm text-gray-500">
             <Link href="/privacy" className="hover:text-gray-900">Privacy Policy</Link>
             <Link href="/terms" className="hover:text-gray-900">Terms of Service</Link>
