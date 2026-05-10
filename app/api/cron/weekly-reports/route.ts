@@ -6,6 +6,7 @@ import { Resend } from "resend";
 import { buildGrantPrompt, BusinessProfile } from "@/lib/prompt";
 import { trackUsage } from "@/lib/track-usage";
 import { buildSimpleEmail } from "@/app/api/generate-report/route";
+import { validateAndCleanReport } from "@/lib/validate-grant-links";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 const resend = new Resend(process.env.RESEND_API_KEY!);
@@ -76,10 +77,15 @@ export async function GET(req: NextRequest) {
           messages: [{ role: "user", content: prompt }],
         });
 
-        const reportContent =
+        const rawContent =
           message.content[0].type === "text" ? message.content[0].text : "";
 
         trackUsage("grant-report-weekly", message.usage as unknown as Parameters<typeof trackUsage>[1]).catch(() => {});
+
+        // Validate and strip dead links before saving
+        const { cleanedContent: reportContent, log: linkLog } = await validateAndCleanReport(rawContent);
+        const deadLinks = linkLog.filter((l) => l.status === "dead").length;
+        if (deadLinks > 0) console.log(`[weekly-reports] Removed ${deadLinks} dead link(s) for user ${user.id}`);
 
         await supabaseAdmin.from("grant_reports").insert({
           user_id: user.id,

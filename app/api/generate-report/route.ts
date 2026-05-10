@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { buildGrantPrompt, BusinessProfile } from "@/lib/prompt";
 import { trackUsage } from "@/lib/track-usage";
 import { Resend } from "resend";
+import { validateAndCleanReport } from "@/lib/validate-grant-links";
 
 export const maxDuration = 60; // Vercel max for Hobby plan
 
@@ -60,11 +61,14 @@ export async function POST(req: NextRequest) {
       messages: [{ role: "user", content: prompt }],
     });
 
-    const reportContent =
+    const rawContent =
       message.content[0].type === "text" ? message.content[0].text : "";
 
     // Track Claude usage for P&L
     trackUsage("grant-report", message.usage as unknown as Parameters<typeof trackUsage>[1]).catch(() => {});
+
+    // Validate and strip dead links before saving
+    const { cleanedContent: reportContent } = await validateAndCleanReport(rawContent);
 
     // Save to database
     const { data: report, error: reportError } = await supabaseAdmin
