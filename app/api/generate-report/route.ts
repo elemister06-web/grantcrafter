@@ -90,6 +90,7 @@ export async function POST(req: NextRequest) {
       from: process.env.RESEND_FROM_EMAIL || "reports@grantcrafter.com",
       to: user.email,
       subject: `Your ${monthLabel} Grant Report — GrantCrafter`,
+      text: `Your ${monthLabel} Grant Report\n\nPrepared for ${profile.businessName}.\n\n${reportContent}\n\n---\nGrantCrafter · for informational purposes only · not a guarantee of award eligibility\nView dashboard: ${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
       html: buildEmailHTML(reportContent, profile.businessName, monthLabel),
     });
 

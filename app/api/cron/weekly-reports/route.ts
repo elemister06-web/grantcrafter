@@ -96,6 +96,7 @@ export async function GET(req: NextRequest) {
           from: process.env.RESEND_FROM_EMAIL || "reports@grantcrafter.com",
           to: user.email,
           subject: `Your Weekly Grant Report — Week of ${weekLabel}`,
+          text: `Your Weekly Grant Report — Week of ${weekLabel}\n\nPrepared for ${user.business_name}.\n\n${reportContent}\n\n---\nGrantCrafter · for informational purposes only · not a guarantee of award eligibility\nView dashboard: ${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
           html: buildWeeklyEmailHTML(reportContent, user.business_name, weekLabel),
         });
 

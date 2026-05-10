@@ -51,6 +51,7 @@ export async function POST(req: NextRequest) {
             from: process.env.RESEND_FROM_EMAIL || "reports@grantcrafter.com",
             to: email,
             subject: "Welcome to GrantCrafter — You're in!",
+            text: `Welcome to GrantCrafter!\n\nYour 7-day free trial is now active. No charge until your trial ends.\n\nNext step: complete your business profile so we can generate your personalized grant report.\n\nVisit your dashboard: ${process.env.NEXT_PUBLIC_APP_URL || 'https://www.grantcrafter.com'}/dashboard\n\n---\nGrantCrafter · for informational purposes only · not a guarantee of award eligibility\nQuestions? Reply to this email.`,
             html: `
 <!DOCTYPE html>
 <html>

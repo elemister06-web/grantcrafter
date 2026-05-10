@@ -116,6 +116,7 @@ async function generateFirstReport(userId: string, profile: BusinessProfile, ema
       from: process.env.RESEND_FROM_EMAIL || "reports@grantcrafter.com",
       to: email,
       subject: `Welcome to GrantCrafter — Your First Grant Report Is Ready`,
+      text: `Welcome to GrantCrafter!\n\nWe got your profile and immediately ran your first grant search. Your ${monthLabel} Grant Report for ${profile.businessName} is ready.\n\nGoing forward, a fresh report will arrive in your inbox every Monday.\n\n${reportContent}\n\n---\nGrantCrafter · for informational purposes only · not a guarantee of award eligibility`,
       html: `
 <!DOCTYPE html>
 <html>
