@@ -136,16 +136,17 @@ function buildEmailHTML(
 
   // Convert markdown to basic HTML, wrapping grant name lines in <div id="slug">
   const html = reportContent
-    .replace(/^## (.+)$/gm, "<h2 style='color:#15803d;margin-top:24px;'>$1</h2>")
-    .replace(/^### (.+)$/gm, "<h3 style='color:#1f2937;'>$1</h3>")
+    .replace(/^# .+$/gm, "") // strip single-hash headings
+    .replace(/^## (.+)$/gm, "<h2 style='color:#15803d;margin-top:28px;font-size:19px;'>$1</h2>")
+    .replace(/^### (.+)$/gm, "<h3 style='color:#1f2937;font-size:17px;'>$1</h3>")
     .replace(/^\*\*([^*\n]+)\*\*$/gm, (_, name) => {
       const slug = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-      return `<div id="${slug}"><strong>${name}</strong></div>`;
+      return `<div id="${slug}" style="font-size:18px;font-weight:700;color:#111827;margin:24px 0 8px;">${name}</div>`;
     })
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-    .replace(/^- (.+)$/gm, "<li style='margin-bottom:4px;'>$1</li>")
-    .replace(/^---$/gm, "<hr style='border:1px solid #e5e7eb;margin:20px 0;'>")
-    .replace(/\n\n/g, "</p><p style='margin:0 0 12px;'>")
+    .replace(/^- (.+)$/gm, "<li style='margin-bottom:8px;font-size:16px;'>$1</li>")
+    .replace(/^---$/gm, "<hr style='border:1px solid #e5e7eb;margin:24px 0;'>")
+    .replace(/\n\n/g, "</p><p style='margin:0 0 14px;font-size:16px;'>")
     .replace(/\n/g, "<br>");
 
   return `
@@ -176,7 +177,7 @@ function buildEmailHTML(
 
     ${tocHTML}
     
-    <div style="color:#374151;line-height:1.7;font-size:15px;">
+    <div style="color:#374151;line-height:1.8;font-size:16px;">
       <p style="margin:0 0 12px;">${html}</p>
     </div>
   </div>

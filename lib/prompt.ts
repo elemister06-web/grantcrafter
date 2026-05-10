@@ -81,6 +81,8 @@ IMPORTANT COMPLIANCE REQUIREMENTS:
 5. This report is for informational purposes only — awards are determined solely by the granting organization.
 6. If a grant's current status is uncertain, say so and direct to the official source.
 7. Do not use markdown tables anywhere in the report — use bullet points and bold text only.
+8. Do not use single-hash headings (# Heading). Use ## for section headers only.
+9. Do not add any introductory header or title line at the very top of the report.
 
 Make this report genuinely useful. This person is counting on accurate, current information to decide where to invest their application time.`;
 }
