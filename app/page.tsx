@@ -41,9 +41,12 @@ export default function HomePage() {
             researches federal, state, local, and private grants — and drops a fresh,
             personalized list into <strong>your private dashboard</strong>.
           </p>
-          <p className="text-lg text-gray-500 mb-10">
+          <p className="text-lg text-gray-500 mb-6">
             No Googling. No grant consultants at $500/hour. No manual work — ever.
             Just log in, review your matches, and apply.
+          </p>
+          <p className="text-2xl font-black text-green-700 mb-10">
+            Set it up once. Grants find you every week.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
@@ -339,9 +342,10 @@ export default function HomePage() {
           <h2 className="text-4xl font-black text-white mb-4">
             There Are Grants With Your Name On Them.
           </h2>
-          <p className="text-gray-400 text-xl mb-10">
+          <p className="text-gray-400 text-xl mb-4">
             Stop leaving funding on the table. Your first personalized report is ready within 24 hours of signup.
           </p>
+          <p className="text-green-400 text-xl font-bold mb-10">Set it up once. Grants find you every week.</p>
           <Link
             href="/signup"
             className="inline-block bg-green-600 hover:bg-green-500 text-white font-black text-xl px-12 py-5 rounded-xl transition-colors shadow-lg"
