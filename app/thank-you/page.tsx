@@ -1,82 +1,80 @@
-import Link from "next/link";
-import Script from "next/script";
+"use client";
+
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+
+function ThankYouContent() {
+  const params = useSearchParams();
+  // We don't have the email here without fetching — keep it generic
+  const sessionId = params.get("session_id");
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#f9fafb", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px" }}>
+
+      {/* Card */}
+      <div style={{ background: "#ffffff", borderRadius: "16px", padding: "48px 40px", maxWidth: "560px", width: "100%", textAlign: "center", border: "1px solid #e5e7eb", boxShadow: "0 4px 24px rgba(0,0,0,0.06)" }}>
+
+        {/* Icon */}
+        <div style={{ fontSize: "72px", marginBottom: "16px" }}>✅</div>
+
+        <h1 style={{ fontSize: "28px", fontWeight: "900", color: "#111827", margin: "0 0 12px", lineHeight: "1.2" }}>
+          Your report is being generated!
+        </h1>
+
+        <p style={{ color: "#6b7280", fontSize: "16px", lineHeight: "1.6", margin: "0 0 32px" }}>
+          Your personalized grant report will arrive in your inbox within <strong style={{ color: "#111827" }}>2–3 minutes</strong>. Check your spam folder if you don't see it.
+        </p>
+
+        {/* While you wait */}
+        <div style={{ background: "#f0fdf4", borderRadius: "12px", padding: "24px", textAlign: "left", marginBottom: "32px", border: "1px solid #bbf7d0" }}>
+          <div style={{ fontWeight: "700", color: "#15803d", fontSize: "16px", marginBottom: "12px" }}>
+            💡 While you wait...
+          </div>
+          <ul style={{ margin: "0", padding: "0 0 0 20px", color: "#374151", lineHeight: "1.8", fontSize: "14px" }}>
+            <li>Locate your EIN and business registration documents</li>
+            <li>Gather your most recent financial statements</li>
+            <li>Note any certifications your business holds (DBE, WOSB, etc.)</li>
+            <li>Prepare a brief description of what you'd use grant funds for</li>
+            <li>Review your business bank account statements (some grants require them)</li>
+          </ul>
+        </div>
+
+        {/* What to expect in report */}
+        <div style={{ background: "#fffbeb", borderRadius: "12px", padding: "20px", textAlign: "left", marginBottom: "32px", border: "1px solid #fde68a" }}>
+          <div style={{ fontWeight: "700", color: "#92400e", fontSize: "15px", marginBottom: "10px" }}>
+            📋 What's in your report
+          </div>
+          <ul style={{ margin: "0", padding: "0 0 0 20px", color: "#78350f", lineHeight: "1.8", fontSize: "14px" }}>
+            <li>8–10 grant opportunities matched to your profile</li>
+            <li>Award amounts and application deadlines</li>
+            <li>Direct "Apply Now" links for each grant</li>
+            <li>Pro tips specific to your industry and location</li>
+          </ul>
+        </div>
+
+        <a
+          href="/"
+          style={{ display: "inline-block", background: "#15803d", color: "#ffffff", padding: "14px 32px", borderRadius: "10px", textDecoration: "none", fontWeight: "700", fontSize: "16px" }}
+        >
+          ← Back to GrantCrafter
+        </a>
+
+        <div style={{ marginTop: "20px", color: "#9ca3af", fontSize: "13px" }}>
+          Questions? <a href="mailto:support@grantcrafter.com" style={{ color: "#15803d" }}>support@grantcrafter.com</a>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function ThankYouPage() {
   return (
-    <main className="min-h-screen bg-green-50 flex flex-col items-center justify-center px-4">
-      <Script id="gtag-conversion" strategy="afterInteractive">
-        {`gtag('event', 'conversion', { 'send_to': 'AW-18151623677' });`}
-      </Script>
-      <div className="max-w-lg w-full text-center">
-        <Link href="/" className="flex items-center justify-center gap-1 mb-10">
-          <span className="text-2xl font-black text-green-700">Grant</span>
-          <span className="text-2xl font-black text-gray-900">Crafter</span>
-        </Link>
-
-        <div className="bg-white rounded-3xl shadow-xl p-10">
-          <div className="text-6xl mb-4">🎉</div>
-          <h1 className="text-3xl font-black text-gray-900 mb-3">
-            You&apos;re all set!
-          </h1>
-          <p className="text-gray-600 mb-6">
-            We&apos;re generating your first grant report right now. You&apos;ll
-            receive it by email within 24 hours.
-          </p>
-
-          <div className="bg-green-50 rounded-2xl p-5 mb-8 text-left space-y-3">
-            <div className="flex items-start gap-3">
-              <span className="text-green-600 text-lg font-bold">✓</span>
-              <div>
-                <div className="font-semibold text-gray-900">
-                  Check your inbox
-                </div>
-                <div className="text-sm text-gray-500">
-                  Your first report arrives in the next 24 hours
-                </div>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <span className="text-green-600 text-lg font-bold">✓</span>
-              <div>
-                <div className="font-semibold text-gray-900">
-                  Weekly reports every Monday
-                </div>
-                <div className="text-sm text-gray-500">
-                  Fresh opportunities every week, automatically
-                </div>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <span className="text-green-600 text-lg font-bold">✓</span>
-              <div>
-                <div className="font-semibold text-gray-900">
-                  Access your dashboard anytime
-                </div>
-                <div className="text-sm text-gray-500">
-                  View all past reports and manage your subscription
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <Link
-            href="/login"
-            className="block bg-green-700 hover:bg-green-800 text-white font-bold py-4 rounded-xl transition-colors"
-          >
-            Go to Dashboard →
-          </Link>
-        </div>
-
-        <p className="text-xs text-gray-400 mt-6">
-          Questions? Email{" "}
-          <a
-            href="mailto:support@grantcrafter.com"
-            className="underline hover:text-gray-600"
-          >
-            support@grantcrafter.com
-          </a>
-        </p>
+    <Suspense fallback={
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "sans-serif", color: "#6b7280" }}>
+        Loading...
       </div>
-    </main>
+    }>
+      <ThankYouContent />
+    </Suspense>
   );
 }

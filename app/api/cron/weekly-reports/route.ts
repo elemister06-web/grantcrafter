@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 export const maxDuration = 60;
+
+// Pay-per-report model: no recurring subscribers, cron disabled
+export async function GET() {
+  return NextResponse.json({ message: "Pay-per-report model — no recurring reports" });
+}
+
+/* DISABLED — original code below */
+/*
 import { supabaseAdmin } from "@/lib/supabase";
 import Anthropic from "@anthropic-ai/sdk";
 import { Resend } from "resend";
@@ -129,3 +137,5 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Cron failed", results }, { status: 500 });
   }
 }
+
+*/

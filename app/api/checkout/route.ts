@@ -1,47 +1,76 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
+import { supabaseAdmin } from "@/lib/supabase";
 
 export async function POST(req: NextRequest) {
   try {
-    const { email } = await req.json();
+    const body = await req.json();
+    const {
+      email,
+      business_name,
+      business_type,
+      industry,
+      city,
+      state,
+      employee_count,
+      annual_revenue,
+      years_in_business,
+      qualifiers,
+      additional_context,
+    } = body;
 
-    if (!email || !email.includes("@")) {
-      return NextResponse.json({ error: "Valid email required" }, { status: 400 });
+    // Validate email
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return NextResponse.json({ error: "Valid email is required" }, { status: 400 });
+    }
+
+    // Insert into report_orders table
+    const { data: order, error: insertError } = await supabaseAdmin
+      .from("report_orders")
+      .insert({
+        email,
+        business_name,
+        business_type,
+        industry,
+        city,
+        state,
+        employee_count,
+        annual_revenue,
+        years_in_business,
+        qualifiers: qualifiers || [],
+        additional_context,
+        status: "pending",
+      })
+      .select("id")
+      .single();
+
+    if (insertError || !order) {
+      console.error("Supabase insert error:", insertError);
+      return NextResponse.json({ error: "Failed to save order" }, { status: 500 });
     }
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.grantcrafter.com";
 
+    // Create Stripe Checkout session (one-time payment)
     const session = await stripe.checkout.sessions.create({
-      mode: "subscription",
-      payment_method_types: ["card"],
-      customer_email: email,
+      mode: "payment",
       line_items: [
         {
-          price: process.env.STRIPE_PRICE_ID!,
+          price: process.env.STRIPE_REPORT_PRICE_ID!,
           quantity: 1,
         },
       ],
-      success_url: `${appUrl}/onboarding?session_id={CHECKOUT_SESSION_ID}`,
+      customer_email: email,
+      success_url: `${appUrl}/thank-you?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl}/?canceled=true`,
-      allow_promotion_codes: true,
-      billing_address_collection: "required",
-      subscription_data: {
-        trial_period_days: 7,
-        metadata: {
-          source: "grantcrafter_web",
-        },
-      },
       metadata: {
-        email,
+        order_id: order.id,
       },
     });
 
     return NextResponse.json({ url: session.url });
   } catch (err) {
     console.error("Checkout error:", err);
-    return NextResponse.json(
-      { error: "Failed to create checkout session" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
