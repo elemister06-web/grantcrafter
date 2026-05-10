@@ -21,6 +21,17 @@ const SLIM_HEADER_HEIGHT = 40;
 const FOOTER_HEIGHT = 20;
 const BOTTOM_BOUNDARY = MARGIN_BOTTOM + FOOTER_HEIGHT + 20;
 
+// Strip characters outside WinAnsi range (pdf-lib standard fonts only support Latin-1)
+function sanitize(text: string): string {
+  return text
+    .replace(/[\u{1F000}-\u{1FFFF}]/gu, "") // strip emoji
+    .replace(/[\u{2700}-\u{27BF}]/gu, "")   // dingbats
+    .replace(/[\u{2600}-\u{26FF}]/gu, "")   // misc symbols
+    .replace(/[^\x00-\xFF]/g, "")           // anything outside Latin-1
+    .replace(/\s{2,}/g, " ")               // collapse extra spaces
+    .trim();
+}
+
 // Wrap text into lines that fit within maxWidth
 function wrapText(text: string, font: PDFFont, fontSize: number, maxWidth: number): string[] {
   const words = text.split(" ");
@@ -46,7 +57,7 @@ function drawFooter(page: PDFPage, regularFont: PDFFont) {
   const text = "GrantCrafter · grantcrafter.com · For informational purposes only";
   const fontSize = 9;
   const textWidth = regularFont.widthOfTextAtSize(text, fontSize);
-  page.drawText(text, {
+  page.drawText(sanitize(text), {
     x: (PAGE_WIDTH - textWidth) / 2,
     y: MARGIN_BOTTOM - 10,
     size: fontSize,
@@ -71,7 +82,7 @@ function drawSlimHeader(
     color: GREEN,
   });
   // GrantCrafter text
-  page.drawText("GrantCrafter", {
+  page.drawText(sanitize("GrantCrafter"), {
     x: MARGIN_LEFT,
     y: PAGE_HEIGHT - SLIM_HEADER_HEIGHT + 13,
     size: 14,
@@ -81,7 +92,7 @@ function drawSlimHeader(
   // Page number
   const pageText = `Page ${pageNum}`;
   const pageTextWidth = regularFont.widthOfTextAtSize(pageText, 10);
-  page.drawText(pageText, {
+  page.drawText(sanitize(pageText), {
     x: PAGE_WIDTH - MARGIN_RIGHT - pageTextWidth,
     y: PAGE_HEIGHT - SLIM_HEADER_HEIGHT + 15,
     size: 10,
@@ -113,7 +124,7 @@ export async function buildReportPDF(
     color: GREEN,
   });
   // "GrantCrafter" left
-  page.drawText("GrantCrafter", {
+  page.drawText(sanitize("GrantCrafter"), {
     x: MARGIN_LEFT,
     y: PAGE_HEIGHT - HEADER_HEIGHT + 30,
     size: 24,
@@ -123,7 +134,7 @@ export async function buildReportPDF(
   // "Weekly Grant Report" right
   const headerSubText = "Weekly Grant Report";
   const headerSubWidth = regularFont.widthOfTextAtSize(headerSubText, 12);
-  page.drawText(headerSubText, {
+  page.drawText(sanitize(headerSubText), {
     x: PAGE_WIDTH - MARGIN_RIGHT - headerSubWidth,
     y: PAGE_HEIGHT - HEADER_HEIGHT + 34,
     size: 12,
@@ -135,7 +146,7 @@ export async function buildReportPDF(
   let y = PAGE_HEIGHT - HEADER_HEIGHT - 30;
 
   // Business name
-  page.drawText(businessName, {
+  page.drawText(sanitize(businessName), {
     x: MARGIN_LEFT,
     y,
     size: 18,
@@ -145,7 +156,7 @@ export async function buildReportPDF(
   y -= 24;
 
   // Period label
-  page.drawText(periodLabel, {
+  page.drawText(sanitize(periodLabel), {
     x: MARGIN_LEFT,
     y,
     size: 12,
@@ -168,7 +179,7 @@ export async function buildReportPDF(
     "This report identifies grant opportunities based on your business profile. Awards are determined solely by each granting organization. For informational purposes only.";
   const disclaimerLines = wrapText(disclaimer, regularFont, 10, CONTENT_WIDTH);
   for (const line of disclaimerLines) {
-    page.drawText(line, {
+    page.drawText(sanitize(line), {
       x: MARGIN_LEFT,
       y,
       size: 10,
@@ -207,7 +218,7 @@ export async function buildReportPDF(
       const title = raw.replace(/^## /, "");
       ensureSpace(36);
       y -= 16; // top padding
-      page.drawText(title, {
+      page.drawText(sanitize(title), {
         x: MARGIN_LEFT,
         y,
         size: 14,
@@ -242,7 +253,7 @@ export async function buildReportPDF(
         color: LIGHT_GRAY,
       });
       for (let li = 0; li < nameLines.length; li++) {
-        page.drawText(nameLines[li], {
+        page.drawText(sanitize(nameLines[li]), {
           x: MARGIN_LEFT + 4,
           y: y - li * 16,
           size: 13,
@@ -280,7 +291,7 @@ export async function buildReportPDF(
           // Draw bullet + field in bold, then value in regular
           const bulletAndField = bullet + fieldText + " ";
           const bfWidth = boldFont.widthOfTextAtSize(bulletAndField, 10);
-          page.drawText(bulletAndField, {
+          page.drawText(sanitize(bulletAndField), {
             x: MARGIN_LEFT + 8,
             y,
             size: 10,
@@ -290,7 +301,7 @@ export async function buildReportPDF(
           // Draw value portion
           const remainingValue = lineText.slice(bulletAndField.length);
           if (remainingValue) {
-            page.drawText(remainingValue, {
+            page.drawText(sanitize(remainingValue), {
               x: MARGIN_LEFT + 8 + bfWidth,
               y,
               size: 10,
@@ -299,7 +310,7 @@ export async function buildReportPDF(
             });
           }
         } else {
-          page.drawText(lineText, {
+          page.drawText(sanitize(lineText), {
             x: MARGIN_LEFT + 8,
             y,
             size: 10,
@@ -342,7 +353,7 @@ export async function buildReportPDF(
     if (/^### (.+)$/.test(raw)) {
       const title = raw.replace(/^### /, "");
       ensureSpace(20);
-      page.drawText(title, {
+      page.drawText(sanitize(title), {
         x: MARGIN_LEFT,
         y,
         size: 11,
@@ -367,7 +378,7 @@ export async function buildReportPDF(
     const textLines = wrapText(cleaned, regularFont, 10, CONTENT_WIDTH);
     for (const tl of textLines) {
       ensureSpace(14);
-      page.drawText(tl, {
+      page.drawText(sanitize(tl), {
         x: MARGIN_LEFT,
         y,
         size: 10,
