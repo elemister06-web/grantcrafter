@@ -45,7 +45,7 @@ function ThankYouContent() {
             📋 What's in your report
           </div>
           <ul style={{ margin: "0", padding: "0 0 0 20px", color: "#78350f", lineHeight: "1.8", fontSize: "14px" }}>
-            <li>8–10 grant opportunities matched to your profile</li>
+            <li>Up to 25 grant opportunities matched to your profile</li>
             <li>Award amounts and application deadlines</li>
             <li>Direct "Apply Now" links for each grant</li>
             <li>Pro tips specific to your industry and location</li>

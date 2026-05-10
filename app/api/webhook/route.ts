@@ -174,11 +174,18 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Order not found" }, { status: 404 });
       }
 
-      // Update with Stripe session ID
+      // Idempotency check — if already processing or completed, skip (prevents Stripe retry duplicates)
+      if (order.status === "processing" || order.status === "completed") {
+        console.log(`Order ${orderId} already ${order.status} — skipping duplicate webhook`);
+        return NextResponse.json({ received: true });
+      }
+
+      // Mark as processing immediately to block any concurrent retries
       await supabaseAdmin
         .from("report_orders")
         .update({ stripe_session_id: session.id, status: "processing" })
-        .eq("id", orderId);
+        .eq("id", orderId)
+        .eq("status", "pending"); // only update if still pending (atomic guard)
 
       // Build profile for prompt
       const profile = {
