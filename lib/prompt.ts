@@ -81,6 +81,21 @@ List grants with deadlines in the next 60 days as bullet points — one per line
 
 ---
 
+VERIFIED PROGRAM URLS (use these exact URLs — do not guess alternatives):
+- MORTAR Cincinnati: https://wearemortar.com/program-page/
+- SBA SBIR/STTR: https://www.sbir.gov/apply
+- Verizon Small Business Digital Ready: https://digitalready.verizonwireless.com/funding
+- Ohio TechCred: https://techcred.ohio.gov
+- Hello Alice Grants: https://helloalice.com/grants/
+- Amber Grant for Women: https://ambergrantsforwomen.com/get-an-amber-grant/apply/
+- Google for Startups: https://startup.google.com/programs/
+- Comcast RISE: https://www.comcastrise.com
+- EDA Build to Scale: https://www.eda.gov/funding/programs/build-to-scale
+- USDA Rural Development OH: https://www.rd.usda.gov/oh
+- NSF SBIR Seed Fund: https://seedfund.nsf.gov/apply/
+- Ohio SBDC: https://www.ohiosbdc.ohio.gov/find-sbdc
+- Ohio Dept of Development: https://development.ohio.gov/
+
 IMPORTANT COMPLIANCE REQUIREMENTS:
 1. Only list real, legitimate grant programs. Do not fabricate or invent grants.
 2. Be accurate about eligibility — do not overstate the likelihood of qualification.
