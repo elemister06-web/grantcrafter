@@ -17,9 +17,16 @@ export function buildGrantPrompt(profile: BusinessProfile): string {
       ? profile.qualifiers.join(", ")
       : "No special ownership qualifiers";
 
+  const today = new Date();
+  const currentDate = today.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+
   return `You are an expert grant research specialist with deep knowledge of federal, state, local, and private grant programs available to small businesses and nonprofits in the United States.
 
-Based on the following business profile, identify 12–18 real, currently active or recurring grant opportunities this business may qualify for this month. Research across all relevant categories: federal programs (Grants.gov, SBA, USDA, EDA, HHS, DOE, DOT), state programs (economic development, SBDC, workforce), local programs (city/county), and private foundations.
+Today's date is ${currentDate}. Based on the following business profile, identify 12–18 real, currently active or recurring grant opportunities this business may qualify for. Research across all relevant categories: federal programs (Grants.gov, SBA, USDA, EDA, HHS, DOE, DOT), state programs (economic development, SBDC, workforce), local programs (city/county), and private foundations.
 
 BUSINESS PROFILE:
 - Business Name: ${profile.businessName}
@@ -32,42 +39,48 @@ BUSINESS PROFILE:
 - Ownership Qualifiers: ${qualifierList}
 - Additional Context: ${profile.additionalContext || "None provided"}
 
-FORMAT YOUR RESPONSE as a structured grant report with the following sections:
+FORMAT YOUR RESPONSE as a structured grant report with the following sections. Do NOT add any header lines like "Generated:" or dates — the system handles that automatically.
 
-## 🏆 Top Opportunities This Month
-[List the 3-5 best matches first — highest funding, best eligibility fit, soonest deadline]
+## 🏆 Top Opportunities This Week
+[List the 3–5 best matches — highest funding, best eligibility fit, soonest deadline. Numbered list.]
 
-## 📋 All Opportunities
+## 📋 All Grant Opportunities
 
-For each grant, provide:
+For each grant, use this exact format:
+
 **[Grant/Program Name]**
 - Organization: [Granting organization]
 - Type: [Federal / State / Local / Private Foundation]
 - Award Amount: [Dollar range or maximum]
-- Eligibility Deadline: [Date or "Rolling" or "Annual — typically [month]"]
-- Match Score: [High / Medium — based on this business's profile]
+- Deadline: [Specific date, "Rolling," or "Annual — typically [Month]"]
+- Match Score: [High / Medium]
 - Who Qualifies: [Key eligibility requirements in plain English]
-- What It Funds: [2-3 sentences on what the money is for]
-- How to Apply: [Where to find the application — official URL when known]
-- Pro Tip: [One specific tip for this business to strengthen their application]
+- What It Funds: [2–3 sentences on what the money covers]
+- How to Apply: [Official URL or clear instructions]
+- Pro Tip: [One specific, actionable tip for this exact business]
 
 ---
 
-## 📅 Upcoming Deadlines to Watch
-[List any grants with deadlines in the next 60 days]
+## 📅 Upcoming Deadlines
 
-## 💡 Qualification Tips for This Business
-[3-5 specific tips to improve grant eligibility, based on their profile]
+List grants with deadlines in the next 60 days as bullet points — one per line in this format:
+- **[Grant Name]** — Deadline: [Date] — [One-line action to take]
+
+(If no firm deadlines are known, list the 3–5 most time-sensitive rolling programs instead.)
+
+## 💡 Tips to Strengthen Eligibility
+[3–5 specific, actionable tips based on this business's exact profile — not generic advice]
 
 ---
 
 IMPORTANT COMPLIANCE REQUIREMENTS:
-1. Only list real, legitimate grant programs. Do not fabricate grants.
-2. Be accurate about eligibility — do not overstate qualification likelihood.
-3. Use hedging language: "may qualify," "appears eligible," "worth investigating."
-4. For private foundation grants, clearly note they require a full application review.
-5. This report is informational only — awards are determined by the granting organization.
+1. Only list real, legitimate grant programs. Do not fabricate or invent grants.
+2. Be accurate about eligibility — do not overstate the likelihood of qualification.
+3. Use hedging language throughout: "may qualify," "appears eligible," "worth investigating."
+4. For private foundation grants, clearly note they require a full application review process.
+5. This report is for informational purposes only — awards are determined solely by the granting organization.
 6. If a grant's current status is uncertain, say so and direct to the official source.
+7. Do not use markdown tables anywhere in the report — use bullet points and bold text only.
 
-Make this report genuinely useful. This person is counting on accurate information to make decisions about where to invest their time applying for grants.`;
+Make this report genuinely useful. This person is counting on accurate, current information to decide where to invest their application time.`;
 }
