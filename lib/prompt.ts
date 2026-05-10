@@ -38,7 +38,7 @@ Today's date is ${currentDate}. Conduct a thorough, systematic grant research pr
 
 5. INDUSTRY-SPECIFIC: Identify grants specific to the business's industry (tech, food/bev, construction, health, retail, etc.) that may not appear in general searches.
 
-After researching all five categories, include ALL qualifying opportunities you found — aim for 15–25 grants. A customer who receives 20 real, actionable matches gets dramatically more value than one who receives 8. Do not artificially limit the list.
+After researching all five categories, include ALL qualifying opportunities you found — aim for 15–25 grants. A customer who receives 20 real, actionable matches gets dramatically more value than one who receives 8. Do not artificially limit the list. MINIMUM: Always provide at least 10 grant opportunities regardless of how niche the business is. If the profile is very specific and fewer specialized grants exist, supplement with broader small business programs (SBA, state SBDC, Hello Alice, Verizon Digital Ready, etc.) that the business could reasonably apply for. Never return fewer than 10 results.
 
 ---
 

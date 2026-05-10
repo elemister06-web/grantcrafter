@@ -158,15 +158,36 @@ export default function GetReportPage() {
               <label style={{ display: "block", fontWeight: "600", color: "#374151", marginBottom: "6px", fontSize: "14px" }}>
                 Industry <span style={{ color: "#ef4444" }}>*</span>
               </label>
-              <input
-                type="text"
+              <select
                 name="industry"
                 required
                 value={form.industry}
                 onChange={handleChange}
-                placeholder="e.g. Construction, Food & Beverage, Technology..."
-                style={{ width: "100%", padding: "10px 14px", border: "1px solid #d1d5db", borderRadius: "8px", fontSize: "15px", boxSizing: "border-box" }}
-              />
+                style={{ width: "100%", padding: "10px 14px", border: "1px solid #d1d5db", borderRadius: "8px", fontSize: "15px", boxSizing: "border-box", background: "#ffffff", color: form.industry ? "#111827" : "#9ca3af" }}
+              >
+                <option value="">Select your industry…</option>
+                <option value="Agriculture / Farming">Agriculture / Farming</option>
+                <option value="Automotive">Automotive</option>
+                <option value="Beauty / Personal Care">Beauty / Personal Care</option>
+                <option value="Child Care / Education">Child Care / Education</option>
+                <option value="Construction / Contracting">Construction / Contracting</option>
+                <option value="Consulting / Professional Services">Consulting / Professional Services</option>
+                <option value="Creative / Arts / Media">Creative / Arts / Media</option>
+                <option value="E-commerce / Online Business">E-commerce / Online Business</option>
+                <option value="Food & Beverage / Restaurant">Food &amp; Beverage / Restaurant</option>
+                <option value="Healthcare / Medical">Healthcare / Medical</option>
+                <option value="Home Services / Trades">Home Services / Trades</option>
+                <option value="Hospitality / Tourism">Hospitality / Tourism</option>
+                <option value="Legal / Accounting / Finance">Legal / Accounting / Finance</option>
+                <option value="Manufacturing">Manufacturing</option>
+                <option value="Nonprofit / Social Services">Nonprofit / Social Services</option>
+                <option value="Real Estate">Real Estate</option>
+                <option value="Retail / Brick-and-Mortar">Retail / Brick-and-Mortar</option>
+                <option value="Technology / Software">Technology / Software</option>
+                <option value="Transportation / Logistics">Transportation / Logistics</option>
+                <option value="Wholesale / Distribution">Wholesale / Distribution</option>
+                <option value="Other">Other (describe in additional context)</option>
+              </select>
             </div>
 
             {/* City + State */}

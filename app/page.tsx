@@ -40,7 +40,7 @@ function HomeContent() {
             Your Personalized<br />Grant List — In Minutes
           </h1>
           <p style={{ color: "#bbf7d0", fontSize: "19px", lineHeight: "1.65", margin: "0 0 12px", maxWidth: "580px", marginLeft: "auto", marginRight: "auto" }}>
-            Tell us about your business. We research 20+ real grants you may qualify for — federal, state, local, and private — and deliver them straight to your inbox.
+            Tell us about your business. We research up to 25 real grants you may qualify for — federal, state, local, and private — and deliver them straight to your inbox.
           </p>
           <p style={{ color: "#86efac", fontSize: "15px", fontWeight: "600", margin: "0 0 40px" }}>
             No subscription. No account. $19.99, one time.
@@ -167,7 +167,7 @@ function HomeContent() {
             {[
               { step: "1", icon: "📝", title: "Tell us about your business", desc: "Fill out a simple form — business type, industry, location, size, and any ownership qualifiers. Takes about 2 minutes." },
               { step: "2", icon: "💳", title: "Pay $19.99 — one time", desc: "No subscription, no recurring charges, no account to manage. Secure checkout via Stripe. Pay once, that's it." },
-              { step: "3", icon: "📬", title: "Your report hits your inbox", desc: "Within ~2 minutes, a personalized report with 20+ real grant opportunities lands in your email. Ready to act on immediately." },
+              { step: "3", icon: "📬", title: "Your report hits your inbox", desc: "Within ~2 minutes, a personalized report with up to 25 real grant opportunities lands in your email. Ready to act on immediately." },
             ].map(item => (
               <div key={item.step} style={{ background: "#f9fafb", borderRadius: "16px", padding: "32px 24px", textAlign: "center", border: "1px solid #e5e7eb" }}>
                 <div style={{ width: "52px", height: "52px", background: "#15803d", color: "#ffffff", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px", fontWeight: "900", margin: "0 auto 16px" }}>
@@ -195,7 +195,7 @@ function HomeContent() {
             <div style={{ color: "#15803d", fontSize: "14px", fontWeight: "600", margin: "0 0 32px" }}>7-day money-back guarantee</div>
             <ul style={{ textAlign: "left", margin: "0 0 32px", padding: "0", listStyle: "none" }}>
               {[
-                "20+ personalized grant opportunities",
+                "Up to 25 personalized grant opportunities",
                 "Federal, state, local & private grants",
                 "Award amounts & application deadlines",
                 "Direct Apply Now links — verified",
@@ -229,7 +229,8 @@ function HomeContent() {
             { q: "I'm a for-profit business, not a nonprofit. Is this for me?", a: "Yes — and this is actually where we stand out. Most grant tools are built for nonprofits. GrantCrafter specifically researches programs available to for-profit small businesses, including SBA programs, state economic development grants, and corporate programs that serve businesses of all types." },
             { q: "How long does it take?", a: "Usually 2–3 minutes after payment. Our AI researches and compiles your report in real-time." },
             { q: "Do I need to create an account?", a: "No. Just your email address and business details. No login, no password, no dashboard to manage." },
-            { q: "What if I'm not happy with my report?", a: "Email us at support@grantcrafter.com within 7 days and we'll refund your payment in full, no questions asked." },
+            { q: "How many grants will be in my report?", a: "Most reports include 15–25 grant opportunities. The exact number depends on your business profile — location, industry, size, and ownership qualifiers all affect how many programs you qualify for. Niche industries or very rural areas may yield fewer matches than urban businesses with broader eligibility. Every grant listed is a real program we believe you may qualify for — we never pad reports with irrelevant results." },
+            { q: "What if I\'m not happy with my report?", a: "Email us at support@grantcrafter.com within 7 days and we\'ll refund your payment in full, no questions asked." },
             { q: "Can I order another report later?", a: "Absolutely. Come back anytime — especially if your business situation changes or you want updated results." },
           ].map((item, i) => (
             <div key={i} style={{ borderBottom: "1px solid #e5e7eb", paddingBottom: "22px", marginBottom: "22px" }}>
