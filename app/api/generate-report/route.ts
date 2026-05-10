@@ -3,6 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { supabaseAdmin } from "@/lib/supabase";
 import { buildGrantPrompt, BusinessProfile } from "@/lib/prompt";
 import { trackUsage } from "@/lib/track-usage";
+import { buildReportPDF } from "@/lib/pdf-report";
 import { Resend } from "resend";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
@@ -80,18 +81,32 @@ export async function POST(req: NextRequest) {
       console.error("Report save error:", reportError);
     }
 
-    // Send email
+    // Build period label and PDF
     const monthLabel = new Date().toLocaleString("en-US", {
       month: "long",
       year: "numeric",
     });
+    const periodLabel = monthLabel;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "";
 
+    const pdfBytes = await buildReportPDF(reportContent, profile.businessName, periodLabel);
+
+    const slugifiedPeriod = periodLabel.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+    // Send email with PDF attachment
     await resend.emails.send({
       from: process.env.RESEND_FROM_EMAIL || "reports@grantcrafter.com",
       to: user.email,
-      subject: `Your ${monthLabel} Grant Report — GrantCrafter`,
-      text: `Your ${monthLabel} Grant Report\n\nPrepared for ${profile.businessName}.\n\n${reportContent}\n\n---\nGrantCrafter · for informational purposes only · not a guarantee of award eligibility\nView dashboard: ${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
-      html: buildEmailHTML(reportContent, profile.businessName, monthLabel),
+      subject: `Your Grant Report is Ready — ${periodLabel}`,
+      text: `Hi,\n\nYour GrantCrafter grant report for ${profile.businessName} is attached as a PDF.\n\nPeriod: ${periodLabel}\n\nView your dashboard: ${appUrl}/dashboard\n\n---\nGrantCrafter · For informational purposes only`,
+      html: buildSimpleEmail(profile.businessName, periodLabel, appUrl),
+      attachments: [
+        {
+          filename: `GrantCrafter-Report-${slugifiedPeriod}.pdf`,
+          content: Buffer.from(pdfBytes).toString("base64"),
+          contentType: "application/pdf",
+        },
+      ],
     });
 
     return NextResponse.json({ success: true, reportId: report?.id });
@@ -101,100 +116,28 @@ export async function POST(req: NextRequest) {
   }
 }
 
-function extractGrantNames(content: string): { name: string; slug: string }[] {
-  const results: { name: string; slug: string }[] = [];
-  const lines = content.split("\n");
-  for (const line of lines) {
-    const match = line.match(/^\*\*([^*]+)\*\*$/);
-    if (match) {
-      const name = match[1].trim();
-      const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-      results.push({ name, slug });
-    }
-  }
-  return results;
-}
-
-function buildGrantTOCHTML(grants: { name: string; slug: string }[]): string {
-  if (!grants.length) return "";
-  return `
-<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px;margin-bottom:24px;">
-  <div style="font-weight:700;color:#15803d;margin-bottom:10px;">Jump to a grant:</div>
-  <div style="display:flex;flex-wrap:wrap;gap:8px;">
-    ${grants.map((g) => `<a href="#${g.slug}" style="background:#15803d;color:white;padding:4px 12px;border-radius:20px;font-size:13px;text-decoration:none;">${g.name}</a>`).join("\n    ")}
-  </div>
-</div>`;
-}
-
-function buildEmailHTML(
-  reportContent: string,
+export function buildSimpleEmail(
   businessName: string,
-  monthLabel: string
+  periodLabel: string,
+  appUrl: string
 ): string {
-  const grantNames = extractGrantNames(reportContent);
-  const tocHTML = buildGrantTOCHTML(grantNames);
-
-  // Convert markdown to basic HTML, wrapping grant name lines in <div id="slug">
-  const html = reportContent
-    .replace(/^# .+$/gm, "") // strip single-hash headings
-    .replace(/^## (.+)$/gm, "<h2 style='color:#15803d;margin-top:28px;font-size:19px;'>$1</h2>")
-    .replace(/^### (.+)$/gm, "<h3 style='color:#1f2937;font-size:17px;'>$1</h3>")
-    .replace(/^\*\*([^*\n]+)\*\*$/gm, (_, name) => {
-      const slug = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-      return `<div id="${slug}" style="font-size:18px;font-weight:700;color:#111827;margin:24px 0 8px;">${name}</div>`;
-    })
-    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-    .replace(/^- (.+)$/gm, "<li style='margin-bottom:8px;font-size:16px;'>$1</li>")
-    .replace(/^---$/gm, "<hr style='border:1px solid #e5e7eb;margin:24px 0;'>")
-    .replace(/\n\n/g, "</p><p style='margin:0 0 14px;font-size:16px;'>")
-    .replace(/\n/g, "<br>");
-
-  return `
-<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"></head>
-<body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:680px;margin:0 auto;padding:0;background:#f9fafb;">
-  <div style="background:#15803d;padding:32px 24px;text-align:center;">
-    <div style="font-size:28px;font-weight:900;color:white;letter-spacing:-0.5px;">
-      Grant<span style="color:#bbf7d0;">Crafter</span>
-    </div>
-    <div style="color:#bbf7d0;margin-top:8px;font-size:16px;">
-      ${monthLabel} Grant Report
-    </div>
+<body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:600px;margin:0 auto;background:#f9fafb;">
+  <div style="background:#15803d;padding:28px 24px;text-align:center;">
+    <div style="font-size:26px;font-weight:900;color:white;">Grant<span style="color:#bbf7d0;">Crafter</span></div>
   </div>
-  
-  <div style="background:white;padding:32px 24px;">
-    <h1 style="color:#111827;font-size:22px;margin:0 0 8px;">
-      Your ${monthLabel} Grant Opportunities
-    </h1>
-    <p style="color:#6b7280;margin:0 0 24px;">
-      Prepared for <strong>${businessName}</strong>. Here are the funding opportunities our AI identified for you this month.
-    </p>
-    
-    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px;margin-bottom:24px;font-size:14px;color:#166534;">
-      ℹ️ <strong>Important:</strong> This report identifies grant opportunities based on your profile. Grant awards are determined solely by the granting organization. Apply to every opportunity that fits — the more you apply, the better your odds.
-    </div>
-
-    ${tocHTML}
-    
-    <div style="color:#374151;line-height:1.8;font-size:16px;">
-      <p style="margin:0 0 12px;">${html}</p>
-    </div>
+  <div style="background:white;padding:36px 32px;text-align:center;">
+    <div style="font-size:40px;margin-bottom:16px;">📎</div>
+    <h1 style="color:#111827;font-size:22px;margin:0 0 12px;">Your Grant Report is Ready</h1>
+    <p style="color:#6b7280;font-size:16px;margin:0 0 8px;">Prepared for <strong style="color:#111827;">${businessName}</strong></p>
+    <p style="color:#9ca3af;font-size:14px;margin:0 0 28px;">${periodLabel}</p>
+    <p style="color:#374151;font-size:16px;margin:0 0 28px;">Your personalized grant report is attached as a PDF. Open it to see all the opportunities we found for your business this week.</p>
+    <a href="${appUrl}/dashboard" style="background:#15803d;color:white;padding:14px 32px;border-radius:8px;font-weight:700;text-decoration:none;display:inline-block;font-size:16px;">View Dashboard →</a>
   </div>
-  
-  <div style="background:#1f2937;padding:24px;text-align:center;">
-    <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" 
-       style="background:#16a34a;color:white;padding:12px 28px;border-radius:8px;font-weight:700;text-decoration:none;display:inline-block;margin-bottom:16px;">
-      View in Dashboard →
-    </a>
-    <p style="color:#9ca3af;font-size:12px;margin:0;">
-      GrantCrafter · grant research and discovery for small businesses<br>
-      <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" style="color:#6b7280;">Manage subscription</a> · 
-      <a href="${process.env.NEXT_PUBLIC_APP_URL}/privacy" style="color:#6b7280;">Privacy Policy</a>
-    </p>
-    <p style="color:#6b7280;font-size:11px;margin:12px 0 0;">
-      This report is for informational purposes only. GrantCrafter does not guarantee grant awards.
-    </p>
+  <div style="background:#1f2937;padding:20px 24px;text-align:center;">
+    <p style="color:#9ca3af;font-size:12px;margin:0;">GrantCrafter · For informational purposes only · Not a guarantee of grant eligibility<br>
+    <a href="${appUrl}/dashboard" style="color:#6b7280;">Manage subscription</a> · <a href="${appUrl}/privacy" style="color:#6b7280;">Privacy Policy</a></p>
   </div>
 </body>
 </html>`;

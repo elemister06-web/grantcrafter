@@ -5,6 +5,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import { Resend } from "resend";
 import { buildGrantPrompt, BusinessProfile } from "@/lib/prompt";
 import { trackUsage } from "@/lib/track-usage";
+import { buildReportPDF } from "@/lib/pdf-report";
+import { buildSimpleEmail } from "@/app/api/generate-report/route";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 const resend = new Resend(process.env.RESEND_API_KEY!);
@@ -98,78 +100,53 @@ async function generateFirstReport(userId: string, profile: BusinessProfile, ema
       sent_at: new Date().toISOString(),
     });
 
-    // Send welcome + first report email
     const monthLabel = new Date().toLocaleString("en-US", {
       month: "long",
       year: "numeric",
     });
+    const periodLabel = monthLabel;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "";
 
-    // Extract grant names for TOC
-    const grantNamesOnboarding = reportContent
-      .split("\n")
-      .filter((line) => /^\*\*([^*]+)\*\*$/.test(line))
-      .map((line) => {
-        const name = line.replace(/\*\*/g, "").trim();
-        const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-        return { name, slug };
-      });
-    const tocHTMLOnboarding = grantNamesOnboarding.length
-      ? `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px;margin-bottom:24px;"><div style="font-weight:700;color:#15803d;margin-bottom:10px;">Jump to a grant:</div><div style="display:flex;flex-wrap:wrap;gap:8px;">${grantNamesOnboarding.map((g) => `<a href="#${g.slug}" style="background:#15803d;color:white;padding:4px 12px;border-radius:20px;font-size:13px;text-decoration:none;">${g.name}</a>`).join("")}</div></div>`
-      : "";
+    // Build PDF
+    const pdfBytes = await buildReportPDF(reportContent, profile.businessName, periodLabel);
+    const slugifiedPeriod = periodLabel.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
-    const htmlReport = reportContent
-      .replace(/^# .+$/gm, "") // strip single-hash headings
-      .replace(/^## (.+)$/gm, "<h2 style='color:#15803d;margin-top:28px;font-size:19px;'>$1</h2>")
-      .replace(/^\*\*([^*\n]+)\*\*$/gm, (_, name) => {
-        const slug = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-        return `<div id="${slug}" style="font-size:18px;font-weight:700;color:#111827;margin:24px 0 8px;">${name}</div>`;
-      })
-      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-      .replace(/^- (.+)$/gm, "<li style='margin-bottom:8px;font-size:16px;'>$1</li>")
-      .replace(/^---$/gm, "<hr style='border:1px solid #e5e7eb;margin:24px 0;'>")
-      .replace(/\n\n/g, "</p><p style='margin:0 0 14px;font-size:16px;'>")
-      .replace(/\n/g, "<br>");
+    // Welcome email body — simple format with welcome intro
+    const welcomeHtml = `<!DOCTYPE html>
+<html>
+<body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:600px;margin:0 auto;background:#f9fafb;">
+  <div style="background:#15803d;padding:28px 24px;text-align:center;">
+    <div style="font-size:26px;font-weight:900;color:white;">Grant<span style="color:#bbf7d0;">Crafter</span></div>
+  </div>
+  <div style="background:white;padding:36px 32px;text-align:center;">
+    <div style="font-size:40px;margin-bottom:16px;">🎉</div>
+    <h1 style="color:#111827;font-size:22px;margin:0 0 12px;">Welcome to GrantCrafter!</h1>
+    <p style="color:#6b7280;font-size:16px;margin:0 0 8px;">Prepared for <strong style="color:#111827;">${profile.businessName}</strong></p>
+    <p style="color:#9ca3af;font-size:14px;margin:0 0 28px;">${periodLabel}</p>
+    <p style="color:#374151;font-size:16px;margin:0 0 16px;">Your first grant report is attached as a PDF. Open it to see all the opportunities we found for your business.</p>
+    <p style="color:#374151;font-size:15px;margin:0 0 28px;">Going forward, a fresh report arrives every Monday.</p>
+    <a href="${appUrl}/dashboard" style="background:#15803d;color:white;padding:14px 32px;border-radius:8px;font-weight:700;text-decoration:none;display:inline-block;font-size:16px;">View Dashboard →</a>
+  </div>
+  <div style="background:#1f2937;padding:20px 24px;text-align:center;">
+    <p style="color:#9ca3af;font-size:12px;margin:0;">GrantCrafter · For informational purposes only · Not a guarantee of grant eligibility<br>
+    <a href="${appUrl}/dashboard" style="color:#6b7280;">Manage subscription</a> · <a href="${appUrl}/privacy" style="color:#6b7280;">Privacy Policy</a></p>
+  </div>
+</body>
+</html>`;
 
     await resend.emails.send({
       from: process.env.RESEND_FROM_EMAIL || "reports@grantcrafter.com",
       to: email,
-      subject: `Welcome to GrantCrafter — Your First Grant Report Is Ready`,
-      text: `Welcome to GrantCrafter!\n\nWe got your profile and immediately ran your first grant search. Your ${monthLabel} Grant Report for ${profile.businessName} is ready.\n\nGoing forward, a fresh report will arrive in your inbox every Monday.\n\n${reportContent}\n\n---\nGrantCrafter · for informational purposes only · not a guarantee of award eligibility`,
-      html: `
-<!DOCTYPE html>
-<html>
-<body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:680px;margin:0 auto;background:#f9fafb;">
-  <div style="background:#15803d;padding:32px 24px;text-align:center;">
-    <div style="font-size:28px;font-weight:900;color:white;">Grant<span style="color:#bbf7d0;">Crafter</span></div>
-    <div style="color:#bbf7d0;margin-top:8px;font-size:16px;">Welcome — Your First Report Is Ready</div>
-  </div>
-  <div style="background:white;padding:32px 24px;">
-    <h1 style="color:#111827;font-size:22px;margin:0 0 8px;">Welcome to GrantCrafter! 🎉</h1>
-    <p style="color:#6b7280;margin:0 0 20px;">
-      We got your profile and immediately ran your first grant search. Here's your 
-      <strong>${monthLabel} Grant Report</strong> for <strong>${profile.businessName}</strong>.
-    </p>
-    <p style="color:#6b7280;margin:0 0 20px;">
-      Going forward, a fresh report will arrive in your inbox every Monday.
-    </p>
-    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px;margin-bottom:24px;font-size:14px;color:#166534;">
-      ℹ️ <strong>Reminder:</strong> This report identifies opportunities based on your profile. Grant awards are always determined by the granting organization. We recommend applying to every opportunity that looks like a strong fit.
-    </div>
-    ${tocHTMLOnboarding}
-    <div style="color:#374151;line-height:1.7;font-size:15px;">
-      <p style="margin:0 0 12px;">${htmlReport}</p>
-    </div>
-  </div>
-  <div style="background:#1f2937;padding:24px;text-align:center;">
-    <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" style="background:#16a34a;color:white;padding:12px 28px;border-radius:8px;font-weight:700;text-decoration:none;display:inline-block;margin-bottom:16px;">
-      View Your Dashboard →
-    </a>
-    <p style="color:#6b7280;font-size:11px;margin:8px 0 0;">
-      GrantCrafter · for informational purposes only · not a guarantee of award eligibility
-    </p>
-  </div>
-</body>
-</html>`,
+      subject: "Welcome to GrantCrafter — Your First Report is Attached",
+      text: `Welcome to GrantCrafter!\n\nYour first grant report for ${profile.businessName} is attached as a PDF.\n\nPeriod: ${periodLabel}\n\nGoing forward, a fresh report arrives every Monday.\n\nView your dashboard: ${appUrl}/dashboard\n\n---\nGrantCrafter · For informational purposes only`,
+      html: welcomeHtml,
+      attachments: [
+        {
+          filename: `GrantCrafter-Report-${slugifiedPeriod}.pdf`,
+          content: Buffer.from(pdfBytes).toString("base64"),
+          contentType: "application/pdf",
+        },
+      ],
     });
   } catch (err) {
     console.error("First report generation failed:", err);

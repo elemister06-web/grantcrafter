@@ -4,6 +4,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import { Resend } from "resend";
 import { buildGrantPrompt, BusinessProfile } from "@/lib/prompt";
 import { trackUsage } from "@/lib/track-usage";
+import { buildReportPDF } from "@/lib/pdf-report";
+import { buildSimpleEmail } from "@/app/api/generate-report/route";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 const resend = new Resend(process.env.RESEND_API_KEY!);
@@ -91,13 +93,26 @@ export async function GET(req: NextRequest) {
           day: "numeric",
           year: "numeric",
         });
+        const periodLabel = `Week of ${weekLabel}`;
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || "";
+
+        // Build PDF
+        const pdfBytes = await buildReportPDF(reportContent, user.business_name, periodLabel);
+        const slugifiedPeriod = periodLabel.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
         await resend.emails.send({
           from: process.env.RESEND_FROM_EMAIL || "reports@grantcrafter.com",
           to: user.email,
-          subject: `Your Weekly Grant Report — Week of ${weekLabel}`,
-          text: `Your Weekly Grant Report — Week of ${weekLabel}\n\nPrepared for ${user.business_name}.\n\n${reportContent}\n\n---\nGrantCrafter · for informational purposes only · not a guarantee of award eligibility\nView dashboard: ${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
-          html: buildWeeklyEmailHTML(reportContent, user.business_name, weekLabel),
+          subject: `Your Weekly Grant Report — ${periodLabel}`,
+          text: `Hi,\n\nYour GrantCrafter grant report for ${user.business_name} is attached as a PDF.\n\nPeriod: ${periodLabel}\n\nView your dashboard: ${appUrl}/dashboard\n\n---\nGrantCrafter · For informational purposes only`,
+          html: buildSimpleEmail(user.business_name, periodLabel, appUrl),
+          attachments: [
+            {
+              filename: `GrantCrafter-Report-${slugifiedPeriod}.pdf`,
+              content: Buffer.from(pdfBytes).toString("base64"),
+              contentType: "application/pdf",
+            },
+          ],
         });
 
         results.success++;
@@ -116,71 +131,4 @@ export async function GET(req: NextRequest) {
     console.error("Weekly cron job failed:", err);
     return NextResponse.json({ error: "Cron failed", results }, { status: 500 });
   }
-}
-
-function buildWeeklyEmailHTML(
-  reportContent: string,
-  businessName: string,
-  weekLabel: string
-): string {
-  // Extract grant names for TOC
-  const grantNames = reportContent
-    .split("\n")
-    .filter((line) => /^\*\*([^*]+)\*\*$/.test(line))
-    .map((line) => {
-      const name = line.replace(/\*\*/g, "").trim();
-      const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-      return { name, slug };
-    });
-  const tocHTML = grantNames.length
-    ? `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px;margin-bottom:24px;"><div style="font-weight:700;color:#15803d;margin-bottom:10px;">Jump to a grant:</div><div style="display:flex;flex-wrap:wrap;gap:8px;">${grantNames.map((g) => `<a href="#${g.slug}" style="background:#15803d;color:white;padding:4px 12px;border-radius:20px;font-size:13px;text-decoration:none;">${g.name}</a>`).join("")}</div></div>`
-    : "";
-
-  const html = reportContent
-    .replace(/^# .+$/gm, "") // strip single-hash headings
-    .replace(/^## (.+)$/gm, "<h2 style='color:#15803d;margin-top:28px;font-size:19px;'>$1</h2>")
-    .replace(/^### (.+)$/gm, "<h3 style='color:#1f2937;font-size:17px;'>$1</h3>")
-    .replace(/^\*\*([^*\n]+)\*\*$/gm, (_, name) => {
-      const slug = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-      return `<div id="${slug}" style="font-size:18px;font-weight:700;color:#111827;margin:24px 0 8px;">${name}</div>`;
-    })
-    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-    .replace(/^- (.+)$/gm, "<li style='margin-bottom:8px;font-size:16px;'>$1</li>")
-    .replace(/^---$/gm, "<hr style='border:1px solid #e5e7eb;margin:24px 0;'>")
-    .replace(/\n\n/g, "</p><p style='margin:0 0 14px;font-size:16px;'>")
-    .replace(/\n/g, "<br>");
-
-  return `
-<!DOCTYPE html>
-<html>
-<body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:680px;margin:0 auto;background:#f9fafb;">
-  <div style="background:#15803d;padding:32px 24px;text-align:center;">
-    <div style="font-size:28px;font-weight:900;color:white;">Grant<span style="color:#bbf7d0;">Crafter</span></div>
-    <div style="color:#bbf7d0;margin-top:8px;">Weekly Grant Report — ${weekLabel}</div>
-  </div>
-  <div style="background:white;padding:32px 24px;">
-    <h1 style="color:#111827;font-size:22px;margin:0 0 16px;">Your Weekly Grant Opportunities</h1>
-    <p style="color:#6b7280;">Prepared for <strong>${businessName}</strong>. Fresh opportunities for this week.</p>
-    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:14px;margin:20px 0;font-size:14px;color:#166534;">
-      ℹ️ This report identifies opportunities based on your profile. Awards are determined by each granting organization.
-    </div>
-    ${tocHTML}
-    <div style="color:#374151;line-height:1.7;">${html}</div>
-  </div>
-  <div style="background:#1f2937;padding:24px;text-align:center;">
-    <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard"
-       style="background:#16a34a;color:white;padding:12px 28px;border-radius:8px;font-weight:700;text-decoration:none;display:inline-block;margin-bottom:16px;">
-      View in Dashboard →
-    </a>
-    <p style="color:#9ca3af;font-size:12px;margin:0;">
-      GrantCrafter · Weekly grant research for small businesses<br>
-      <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" style="color:#6b7280;">Manage subscription</a> ·
-      <a href="${process.env.NEXT_PUBLIC_APP_URL}/privacy" style="color:#6b7280;">Privacy Policy</a>
-    </p>
-    <p style="color:#6b7280;font-size:11px;margin:12px 0 0;">
-      This report is for informational purposes only. GrantCrafter does not guarantee grant awards.
-    </p>
-  </div>
-</body>
-</html>`;
 }
