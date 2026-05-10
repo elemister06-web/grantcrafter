@@ -3,12 +3,18 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { parseGrantsFromReport, ParsedGrant } from "@/lib/parse-grants";
 
 interface GrantReport {
   id: string;
   month: string;
   report_content: string;
   sent_at: string;
+}
+
+interface Application {
+  report_id: string;
+  grant_slug: string;
 }
 
 interface UserData {
@@ -18,6 +24,7 @@ interface UserData {
   subscription_status: string;
   created_at: string;
   grant_reports: GrantReport[];
+  applications: Application[];
 }
 
 const formatReportPeriod = (month: string): string => {
@@ -31,7 +38,6 @@ const formatReportPeriod = (month: string): string => {
     return `Week of ${startOfWeek.toLocaleDateString("en-US", {
       month: "long",
       day: "numeric",
-      year: "numeric",
     })}`;
   }
   const [year, m] = month.split("-");
@@ -68,6 +74,15 @@ const getStatusBadge = (status: string) => {
   }
 };
 
+const getMatchBadge = (score: string) => {
+  const lower = score.toLowerCase();
+  if (lower.includes("high"))
+    return "bg-green-100 text-green-800";
+  if (lower.includes("medium") || lower.includes("mid"))
+    return "bg-amber-100 text-amber-800";
+  return "bg-gray-100 text-gray-600";
+};
+
 export default function DashboardPage() {
   const router = useRouter();
   const [userData, setUserData] = useState<UserData | null>(null);
@@ -76,26 +91,36 @@ export default function DashboardPage() {
   const [cancelBanner, setCancelBanner] = useState("");
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [signingOut, setSigningOut] = useState(false);
+  const [selectedReport, setSelectedReport] = useState<GrantReport | null>(null);
+  const [appliedSet, setAppliedSet] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetch("/api/dashboard", { credentials: "include" })
       .then(async (res) => {
-        if (res.status === 401) {
+        if (res.status === 401 || !res.ok) {
           router.push("/login");
           return;
         }
-        if (!res.ok) {
-          router.push("/login");
-          return;
-        }
-        const data = await res.json();
+        const data: UserData = await res.json();
         setUserData(data);
         setLoading(false);
+        if (data.grant_reports?.length > 0) {
+          setSelectedReport(data.grant_reports[0]);
+        }
       })
-      .catch(() => {
-        router.push("/login");
-      });
+      .catch(() => router.push("/login"));
   }, [router]);
+
+  // Sync applied set when selected report changes
+  useEffect(() => {
+    if (!userData || !selectedReport) return;
+    const slugs = new Set(
+      (userData.applications || [])
+        .filter((a) => a.report_id === selectedReport.id)
+        .map((a) => a.grant_slug)
+    );
+    setAppliedSet(slugs);
+  }, [selectedReport, userData]);
 
   const handleSignOut = async () => {
     setSigningOut(true);
@@ -106,16 +131,12 @@ export default function DashboardPage() {
   const handleCancelConfirm = async () => {
     setCancelState("loading");
     try {
-      const res = await fetch("/api/cancel", {
-        method: "POST",
-        credentials: "include",
-      });
+      const res = await fetch("/api/cancel", { method: "POST", credentials: "include" });
       if (res.ok) {
         setCancelState("done");
         setCancelBanner(
           "Your subscription has been canceled. You'll keep full access until your billing period ends."
         );
-        // Refresh user data
         const refreshRes = await fetch("/api/dashboard", { credentials: "include" });
         if (refreshRes.ok) {
           const data = await refreshRes.json();
@@ -152,6 +173,28 @@ export default function DashboardPage() {
     setDownloadingId(null);
   };
 
+  const toggleApplied = async (grant: ParsedGrant, reportId: string) => {
+    const isApplied = appliedSet.has(grant.slug);
+    // Optimistic update
+    setAppliedSet((prev) => {
+      const next = new Set(prev);
+      if (isApplied) next.delete(grant.slug);
+      else next.add(grant.slug);
+      return next;
+    });
+    await fetch("/api/mark-applied", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        reportId,
+        grantSlug: grant.slug,
+        grantName: grant.name,
+        applied: !isApplied,
+      }),
+    });
+  };
+
   if (loading) {
     return (
       <main className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#f8fafc" }}>
@@ -164,6 +207,13 @@ export default function DashboardPage() {
 
   const statusBadge = getStatusBadge(userData.subscription_status);
   const isSubscriptionActive = ["active", "trialing"].includes(userData.subscription_status);
+
+  // Parse grants for selected report
+  const grants: ParsedGrant[] = selectedReport
+    ? parseGrantsFromReport(selectedReport.report_content || "")
+    : [];
+
+  const appliedCount = grants.filter((g) => appliedSet.has(g.slug)).length;
 
   return (
     <main className="min-h-screen" style={{ backgroundColor: "#f8fafc" }}>
@@ -215,74 +265,179 @@ export default function DashboardPage() {
         </div>
 
         {/* ── REPORTS SECTION ── */}
-        <div>
-          <div className="mb-4">
-            <h2 className="text-xl font-bold text-gray-900">Your Grant Reports</h2>
-            <p className="text-sm text-gray-500 mt-0.5">
-              A new report lands every Monday morning.
-            </p>
-          </div>
-
-          {userData.grant_reports.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {userData.grant_reports.map((report) => (
-                <div
-                  key={report.id}
-                  className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col"
-                >
-                  {/* Document icon */}
-                  <div className="mb-4">
-                    <div className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center text-2xl">
-                      📄
-                    </div>
-                  </div>
-
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">
+        {userData.grant_reports.length > 0 ? (
+          <div>
+            {/* ── REPORT SELECTOR TABS ── */}
+            <div className="flex gap-2 overflow-x-auto pb-1 mb-6 scrollbar-hide">
+              {userData.grant_reports.map((report) => {
+                const isSelected = selectedReport?.id === report.id;
+                return (
+                  <button
+                    key={report.id}
+                    onClick={() => setSelectedReport(report)}
+                    className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-colors whitespace-nowrap ${
+                      isSelected
+                        ? "bg-green-100 text-green-700"
+                        : "bg-white border border-gray-200 text-gray-500 hover:border-green-300 hover:text-green-700"
+                    }`}
+                  >
+                    {isSelected && <span className="mr-1">●</span>}
                     {formatReportPeriod(report.month)}
-                  </h3>
+                  </button>
+                );
+              })}
+            </div>
 
-                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-green-700 bg-green-50 px-3 py-1 rounded-full self-start mb-4">
-                    <span>✓</span> Delivered
-                  </span>
-
-                  <div className="mt-auto">
+            {/* ── GRANT TRACKER ── */}
+            {selectedReport && (
+              <div>
+                {/* Header row */}
+                <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+                  <h2 className="text-lg font-bold text-gray-900">
+                    {grants.length} Grant{grants.length !== 1 ? "s" : ""} Found
+                  </h2>
+                  <div className="flex items-center gap-3">
+                    {appliedCount > 0 && (
+                      <span className="bg-green-100 text-green-800 text-xs font-bold px-3 py-1.5 rounded-full">
+                        {appliedCount} Applied
+                      </span>
+                    )}
                     <button
-                      onClick={() => handleDownload(report)}
-                      disabled={downloadingId === report.id}
-                      className="w-full bg-green-700 hover:bg-green-800 disabled:bg-green-400 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors"
+                      onClick={() => handleDownload(selectedReport)}
+                      disabled={downloadingId === selectedReport.id}
+                      className="text-sm text-gray-600 border border-gray-200 hover:border-gray-400 px-3 py-1.5 rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center gap-1"
                     >
-                      {downloadingId === report.id ? (
-                        <>
-                          <span className="animate-spin">⟳</span>
-                          Generating PDF...
-                        </>
+                      {downloadingId === selectedReport.id ? (
+                        <><span className="animate-spin inline-block">⟳</span> Generating...</>
                       ) : (
-                        <>
-                          <span>↓</span>
-                          Download PDF
-                        </>
+                        <>↓ Download PDF</>
                       )}
                     </button>
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            /* Empty state */
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center">
-              <div className="w-14 h-14 bg-green-50 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
-                📋
+
+                {grants.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {grants.map((grant) => {
+                      const isApplied = appliedSet.has(grant.slug);
+                      return (
+                        <div
+                          key={grant.slug}
+                          className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col"
+                        >
+                          {/* Top badges row */}
+                          <div className="flex items-center gap-2 mb-3 flex-wrap">
+                            {grant.matchScore && (
+                              <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${getMatchBadge(grant.matchScore)}`}>
+                                Match: {grant.matchScore}
+                              </span>
+                            )}
+                            {grant.amount && (
+                              <span className="bg-gray-100 text-gray-700 text-xs font-semibold px-2 py-1 rounded-full">
+                                {grant.amount}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Grant name */}
+                          <h3 className="text-lg font-bold text-gray-900 leading-snug mb-1">
+                            {grant.name}
+                          </h3>
+
+                          {/* Organization · Type */}
+                          {(grant.organization || grant.type) && (
+                            <p className="text-sm text-gray-500 mb-2">
+                              {[grant.organization, grant.type].filter(Boolean).join(" · ")}
+                            </p>
+                          )}
+
+                          {/* Deadline */}
+                          {grant.deadline && (
+                            <p className="text-sm text-amber-700 font-medium mb-2">
+                              📅 Deadline: {grant.deadline}
+                            </p>
+                          )}
+
+                          {/* What it funds */}
+                          {grant.whatItFunds && (
+                            <p className="text-sm text-gray-600 line-clamp-3 mb-4 flex-1">
+                              {grant.whatItFunds}
+                            </p>
+                          )}
+
+                          {/* Action row */}
+                          <div className="border-t border-gray-100 pt-4 flex items-center justify-between gap-3 mt-auto">
+                            {grant.applyUrl ? (
+                              <a
+                                href={grant.applyUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-green-700 font-semibold text-sm hover:text-green-900 flex items-center gap-1"
+                              >
+                                Apply Now →
+                              </a>
+                            ) : (
+                              <span className="text-gray-400 text-sm">See report for details</span>
+                            )}
+
+                            <button
+                              onClick={() => toggleApplied(grant, selectedReport.id)}
+                              className={`text-sm px-4 py-2 rounded-xl transition-colors font-medium ${
+                                isApplied
+                                  ? "bg-green-700 text-white font-semibold"
+                                  : "border border-gray-200 text-gray-500 hover:border-green-500 hover:text-green-700"
+                              }`}
+                            >
+                              {isApplied ? "✓ Applied" : "Mark as Applied"}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  /* Empty state: fallback to download card */
+                  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col items-center text-center max-w-sm mx-auto">
+                    <div className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center text-2xl mb-4">
+                      📄
+                    </div>
+                    <h3 className="text-lg font-bold text-gray-900 mb-2">
+                      {formatReportPeriod(selectedReport.month)}
+                    </h3>
+                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-green-700 bg-green-50 px-3 py-1 rounded-full mb-4">
+                      <span>✓</span> Delivered
+                    </span>
+                    <button
+                      onClick={() => handleDownload(selectedReport)}
+                      disabled={downloadingId === selectedReport.id}
+                      className="w-full bg-green-700 hover:bg-green-800 disabled:bg-green-400 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors"
+                    >
+                      {downloadingId === selectedReport.id ? (
+                        <><span className="animate-spin">⟳</span> Generating PDF...</>
+                      ) : (
+                        <>↓ Download PDF</>
+                      )}
+                    </button>
+                  </div>
+                )}
               </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">
-                Your first report is on its way
-              </h3>
-              <p className="text-sm text-gray-500 max-w-xs mx-auto">
-                We&apos;re generating your personalized grant report right now. You&apos;ll receive
-                it by email — and it&apos;ll appear here — shortly.
-              </p>
+            )}
+          </div>
+        ) : (
+          /* No reports at all */
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center">
+            <div className="w-14 h-14 bg-green-50 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
+              📋
             </div>
-          )}
-        </div>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">
+              Your first report is on its way
+            </h3>
+            <p className="text-sm text-gray-500 max-w-xs mx-auto">
+              We&apos;re generating your personalized grant report right now. You&apos;ll receive
+              it by email — and it&apos;ll appear here — shortly.
+            </p>
+          </div>
+        )}
 
         {/* ── ACCOUNT & BILLING SECTION ── */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">

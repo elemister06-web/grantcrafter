@@ -41,5 +41,11 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  return NextResponse.json(userData);
+  // Also fetch grant applications for this user
+  const { data: applications } = await supabaseAdmin
+    .from("grant_applications")
+    .select("report_id, grant_slug")
+    .eq("user_id", userData.id);
+
+  return NextResponse.json({ ...userData, applications: applications || [] });
 }
