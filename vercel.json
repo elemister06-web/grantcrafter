@@ -18,7 +18,7 @@
     },
     {
       "path": "/api/cron/cancellation-recovery",
-      "schedule": "0 * * * *"
+      "schedule": "0 10 * * *"
     }
   ]
 }
