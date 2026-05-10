@@ -26,7 +26,7 @@ export function buildGrantPrompt(profile: BusinessProfile): string {
 
   return `You are an expert grant research specialist with deep knowledge of federal, state, local, and private grant programs available to small businesses and nonprofits in the United States.
 
-Today's date is ${currentDate}. Based on the following business profile, identify 12–18 real, currently active or recurring grant opportunities this business may qualify for. Research across all relevant categories: federal programs (Grants.gov, SBA, USDA, EDA, HHS, DOE, DOT), state programs (economic development, SBDC, workforce), local programs (city/county), and private foundations.
+Today's date is ${currentDate}. Based on the following business profile, identify 8–10 real, currently active or recurring grant opportunities this business may qualify for. Research across all relevant categories: federal programs (Grants.gov, SBA, USDA, EDA, HHS, DOE, DOT), state programs (economic development, SBDC, workforce), local programs (city/county), and private foundations.
 
 BUSINESS PROFILE:
 - Business Name: ${profile.businessName}
