@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
         const subscriptionId = session.subscription as string;
 
         if (email) {
-          // Create or update the user record
+          // Create or update the user record in the custom users table
           const { error } = await supabaseAdmin.from("users").upsert(
             {
               email,
@@ -45,13 +45,41 @@ export async function POST(req: NextRequest) {
             console.error("Supabase upsert error:", error);
           }
 
+          // Create a Supabase Auth user so they can log in with email+password
+          let passwordSetupLink = "https://www.grantcrafter.com/login";
+          try {
+            // Create auth user (email confirmed, random temp password)
+            const { error: authError } = await supabaseAdmin.auth.admin.createUser({
+              email,
+              password: crypto.randomUUID(),
+              email_confirm: true,
+            });
+            if (authError && !authError.message.includes("already been registered")) {
+              console.error("Auth user creation error:", authError);
+            }
+
+            // Generate a password-setup link (recovery flow)
+            const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+              type: "recovery",
+              email,
+              options: { redirectTo: "https://www.grantcrafter.com/set-password" },
+            });
+            if (linkError) {
+              console.error("Link generation error:", linkError);
+            } else {
+              passwordSetupLink = linkData?.properties?.action_link ?? passwordSetupLink;
+            }
+          } catch (authErr) {
+            console.error("Auth setup error:", authErr);
+          }
+
           // Send signup confirmation email
           const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.grantcrafter.com";
           await resend.emails.send({
             from: process.env.RESEND_FROM_EMAIL || "reports@grantcrafter.com",
             to: email,
             subject: "Welcome to GrantCrafter — You're in!",
-            text: `Welcome to GrantCrafter!\n\nYour 7-day free trial is now active. No charge until your trial ends.\n\nNext step: complete your business profile so we can generate your personalized grant report.\n\nVisit your dashboard: ${process.env.NEXT_PUBLIC_APP_URL || 'https://www.grantcrafter.com'}/dashboard\n\n---\nGrantCrafter · for informational purposes only · not a guarantee of award eligibility\nQuestions? Reply to this email.`,
+            text: `Welcome to GrantCrafter!\n\nYour 7-day free trial is now active. No charge until your trial ends.\n\nNext step: set your password to access your dashboard.\n\nSet your password: ${passwordSetupLink}\n\n---\nGrantCrafter · for informational purposes only · not a guarantee of award eligibility\nQuestions? Reply to this email.`,
             html: `
 <!DOCTYPE html>
 <html>
@@ -69,8 +97,8 @@ export async function POST(req: NextRequest) {
       <strong>Next step:</strong> Complete your business profile so we can generate your personalized grant report. It only takes 2 minutes.
     </p>
     <div style="text-align:center;margin-bottom:24px;">
-      <a href="${appUrl}/dashboard" style="background:#16a34a;color:white;padding:14px 32px;border-radius:8px;font-weight:700;text-decoration:none;display:inline-block;font-size:16px;">
-        Complete My Profile →
+      <a href="${passwordSetupLink}" style="background:#16a34a;color:white;padding:14px 32px;border-radius:8px;font-weight:700;text-decoration:none;display:inline-block;font-size:16px;">
+        Set Your Password &amp; Get Started →
       </a>
     </div>
     <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px;font-size:14px;color:#166534;">

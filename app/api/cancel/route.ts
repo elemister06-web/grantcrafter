@@ -4,26 +4,35 @@ import { supabaseAdmin } from "@/lib/supabase";
 
 export async function POST(req: NextRequest) {
   try {
-    const { email } = await req.json();
+    // Verify auth from cookie
+    const token = req.cookies.get("gc_token")?.value;
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    const { data: user } = await supabaseAdmin
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    if (authError || !user?.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { data: userData } = await supabaseAdmin
       .from("users")
       .select("id, stripe_subscription_id")
-      .eq("email", email.toLowerCase())
+      .eq("email", user.email.toLowerCase())
       .single();
 
-    if (!user?.stripe_subscription_id) {
+    if (!userData?.stripe_subscription_id) {
       return NextResponse.json({ error: "No subscription found" }, { status: 404 });
     }
 
-    await stripe.subscriptions.update(user.stripe_subscription_id, {
+    await stripe.subscriptions.update(userData.stripe_subscription_id, {
       cancel_at_period_end: true,
     });
 
     await supabaseAdmin
       .from("users")
       .update({ subscription_status: "canceling" })
-      .eq("id", user.id);
+      .eq("id", userData.id);
 
     return NextResponse.json({ success: true });
   } catch (err) {

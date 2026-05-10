@@ -60,7 +60,7 @@ export default function ThankYouPage() {
           </div>
 
           <Link
-            href="/dashboard"
+            href="/login"
             className="block bg-green-700 hover:bg-green-800 text-white font-bold py-4 rounded-xl transition-colors"
           >
             Go to Dashboard →

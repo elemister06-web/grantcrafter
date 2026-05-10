@@ -2,33 +2,44 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export async function GET(req: NextRequest) {
-  const email = req.nextUrl.searchParams.get("email");
+  // Read the auth token from the httpOnly cookie
+  const token = req.cookies.get("gc_token")?.value;
 
-  if (!email) {
-    return NextResponse.json({ error: "Email required" }, { status: 400 });
+  if (!token) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { data: user, error } = await supabaseAdmin
+  // Verify the token with Supabase
+  const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+
+  if (authError || !user?.email) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const email = user.email.toLowerCase();
+
+  // Look up the user in our custom table
+  const { data: userData, error } = await supabaseAdmin
     .from("users")
     .select(
-      "id, email, business_name, subscription_status, grant_reports(id, month, report_content, sent_at)"
+      "id, email, business_name, subscription_status, created_at, grant_reports(id, month, report_content, sent_at)"
     )
-    .eq("email", email.toLowerCase())
+    .eq("email", email)
     .single();
 
-  if (error || !user) {
+  if (error || !userData) {
     return NextResponse.json(
-      { error: "No account found for that email address." },
+      { error: "No account found." },
       { status: 404 }
     );
   }
 
   // Sort reports newest first
-  if (user.grant_reports) {
-    (user.grant_reports as { month: string }[]).sort((a, b) =>
+  if (userData.grant_reports) {
+    (userData.grant_reports as { month: string }[]).sort((a, b) =>
       b.month.localeCompare(a.month)
     );
   }
 
-  return NextResponse.json(user);
+  return NextResponse.json(userData);
 }

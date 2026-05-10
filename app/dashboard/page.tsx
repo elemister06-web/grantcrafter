@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 interface GrantReport {
@@ -11,573 +12,326 @@ interface GrantReport {
 }
 
 interface UserData {
+  id: string;
   email: string;
   business_name: string;
   subscription_status: string;
-  stripe_current_period_end?: number;
+  created_at: string;
   grant_reports: GrantReport[];
 }
 
-interface ParsedGrant {
-  id: string;
-  name: string;
-  score: string;
-  fields: Record<string, string>;
-}
-
-const formatMonth = (month: string) => {
+const formatReportPeriod = (month: string): string => {
   if (month.includes("-W")) {
     const [year, week] = month.split("-W");
     const jan4 = new Date(parseInt(year), 0, 4);
     const startOfWeek = new Date(jan4);
-    startOfWeek.setDate(jan4.getDate() - (jan4.getDay() || 7) + 1 + (parseInt(week) - 1) * 7);
-    return `Week of ${startOfWeek.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`;
+    startOfWeek.setDate(
+      jan4.getDate() - (jan4.getDay() || 7) + 1 + (parseInt(week) - 1) * 7
+    );
+    return `Week of ${startOfWeek.toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    })}`;
   }
   const [year, m] = month.split("-");
   const date = new Date(parseInt(year), parseInt(m) - 1);
   return date.toLocaleString("en-US", { month: "long", year: "numeric" });
 };
 
-function slugify(str: string): string {
-  return str.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-}
-
-function parseGrantsFromContent(content: string): ParsedGrant[] {
-  const sections = content.split("\n## ");
-  let targetSection = "";
-
-  for (const s of sections) {
-    if (s.toLowerCase().startsWith("all opportunit")) {
-      targetSection = s;
-      break;
-    }
+const formatMemberSince = (isoDate: string): string => {
+  try {
+    return new Date(isoDate).toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+  } catch {
+    return isoDate;
   }
+};
 
-  if (!targetSection) {
-    for (const s of sections) {
-      if (/\*\*[^*]+\*\*/.test(s)) {
-        targetSection = s;
-        break;
-      }
-    }
+const getStatusBadge = (status: string) => {
+  switch (status) {
+    case "active":
+      return { label: "Active", classes: "bg-green-100 text-green-800" };
+    case "trialing":
+      return { label: "Free Trial", classes: "bg-green-100 text-green-800" };
+    case "canceling":
+      return { label: "Canceling", classes: "bg-amber-100 text-amber-800" };
+    case "past_due":
+      return { label: "Past Due", classes: "bg-red-100 text-red-800" };
+    case "canceled":
+      return { label: "Canceled", classes: "bg-gray-100 text-gray-600" };
+    default:
+      return { label: status, classes: "bg-gray-100 text-gray-600" };
   }
-
-  const grants: ParsedGrant[] = [];
-  const blocks = targetSection.split(/\n(?=\*\*[^*\n]+\*\*\s*\n)/);
-
-  for (const block of blocks) {
-    const nameMatch = block.match(/^\*\*([^*\n]+)\*\*/m);
-    if (!nameMatch) continue;
-
-    const name = nameMatch[1].trim();
-    const id = slugify(name);
-    const fields: Record<string, string> = {};
-    let score = "";
-
-    const fieldLines = block.match(/^- ([^:\n]+): (.+)$/gm) || [];
-    for (const line of fieldLines) {
-      const fm = line.match(/^- ([^:]+): (.+)$/);
-      if (fm) {
-        const key = fm[1].trim();
-        const val = fm[2].trim();
-        if (key.toLowerCase().includes("match")) {
-          score = val;
-        } else {
-          fields[key] = val;
-        }
-      }
-    }
-
-    if (name && (Object.keys(fields).length > 0 || score)) {
-      grants.push({ id, name, score, fields });
-    }
-  }
-
-  return grants;
-}
-
-function makeLinksClickable(text: string): React.ReactNode {
-  const parts = text.split(/(https?:\/\/[^\s]+)/g);
-  return (
-    <>
-      {parts.map((part, i) =>
-        /^https?:\/\//.test(part) ? (
-          <a
-            key={i}
-            href={part}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-green-700 underline break-all"
-          >
-            {part}
-          </a>
-        ) : (
-          <span key={i}>{part}</span>
-        )
-      )}
-    </>
-  );
-}
-
-const ORDERED_FIELDS = [
-  "Organization",
-  "Type",
-  "Amount",
-  "Deadline",
-  "Who Qualifies",
-  "What It Funds",
-  "How to Apply",
-  "Pro Tip",
-];
-
-function GrantCard({ grant }: { grant: ParsedGrant }) {
-  const orderedKeys = ORDERED_FIELDS.filter((f) => grant.fields[f]);
-  const extraKeys = Object.keys(grant.fields).filter(
-    (k) => !ORDERED_FIELDS.includes(k)
-  );
-  const allKeys = [...orderedKeys, ...extraKeys];
-
-  return (
-    <div
-      id={grant.id}
-      className="bg-white rounded-xl border border-gray-200 p-5 mb-4 shadow-sm scroll-mt-20"
-    >
-      <div className="flex items-start justify-between gap-3 mb-3 flex-wrap">
-        <h3 className="text-base font-extrabold text-gray-900">{grant.name}</h3>
-        {grant.score && (
-          <span
-            className={`px-3 py-1 rounded-full text-xs font-bold flex-shrink-0 ${
-              grant.score.toLowerCase().includes("high")
-                ? "bg-green-100 text-green-800"
-                : grant.score.toLowerCase().includes("medium")
-                ? "bg-yellow-100 text-yellow-800"
-                : "bg-gray-100 text-gray-700"
-            }`}
-          >
-            {grant.score.toLowerCase().includes("high") ? "⭐ " : ""}
-            {grant.score}
-          </span>
-        )}
-      </div>
-      <div className="divide-y divide-gray-50">
-        {allKeys.map((field) => {
-          const val = grant.fields[field];
-          if (!val) return null;
-          return (
-            <div key={field} className="flex py-2 gap-3">
-              <span className="text-sm font-semibold text-gray-600 w-36 flex-shrink-0">
-                {field}
-              </span>
-              <span
-                className={`text-sm flex-1 ${
-                  field === "Pro Tip"
-                    ? "text-green-700 font-medium bg-green-50 px-2 py-1 rounded"
-                    : "text-gray-700"
-                }`}
-              >
-                {field === "How to Apply" ? makeLinksClickable(val) : val}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function renderBodyLines(body: string, isTopOpps: boolean) {
-  const lines = body.split("\n").map((line, i) => {
-    if (line.startsWith("**") && line.endsWith("**")) {
-      return (
-        <h3
-          key={i}
-          className={`font-bold mt-4 mb-2 ${isTopOpps ? "text-green-900" : "text-gray-900"}`}
-        >
-          {line.replace(/\*\*/g, "")}
-        </h3>
-      );
-    }
-    if (line.startsWith("- ")) {
-      return (
-        <li key={i} className="text-gray-700 mb-1 ml-4">
-          {line.slice(2).replace(/\*\*(.+?)\*\*/g, "$1")}
-        </li>
-      );
-    }
-    if (line === "---")
-      return (
-        <hr key={i} className="border-gray-200 my-4" />
-      );
-    if (!line.trim()) return null;
-    return (
-      <p key={i} className="text-gray-700 mb-2">
-        {line.replace(/\*\*(.+?)\*\*/g, "$1")}
-      </p>
-    );
-  });
-  return lines.filter(Boolean);
-}
-
-function ReportView({
-  report,
-  businessName,
-}: {
-  report: GrantReport;
-  businessName: string;
-}) {
-  const content = report.report_content;
-  const grants = parseGrantsFromContent(content);
-
-  const rawSections = content.split("\n## ");
-  const sections: { title: string; body: string }[] = rawSections.map(
-    (s, i) => {
-      if (i === 0) {
-        return { title: "", body: s };
-      }
-      const nl = s.indexOf("\n");
-      return {
-        title: nl === -1 ? s.trim() : s.slice(0, nl).trim(),
-        body: nl === -1 ? "" : s.slice(nl + 1),
-      };
-    }
-  );
-
-  return (
-    <div>
-      {/* Disclaimer */}
-      <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-6 text-sm text-amber-800">
-        <strong>Disclaimer:</strong> This report identifies grant opportunities
-        based on your profile. Grant awards are determined solely by each
-        granting organization. GrantCrafter is a research tool — we do not
-        guarantee eligibility or award outcomes.
-      </div>
-
-      {/* Grant TOC chips */}
-      {grants.length > 0 && (
-        <div className="bg-green-50 border border-green-100 rounded-xl p-4 mb-6">
-          <div className="text-sm font-bold text-green-800 mb-3">
-            Jump to a grant:
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {grants.map((g) => (
-              <button
-                key={g.id}
-                onClick={() => {
-                  document
-                    .getElementById(g.id)
-                    ?.scrollIntoView({ behavior: "smooth", block: "start" });
-                }}
-                className="bg-green-700 hover:bg-green-800 text-white text-xs font-semibold px-3 py-1.5 rounded-full transition-colors cursor-pointer"
-              >
-                {g.name}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Report Sections */}
-      {sections.map((s, i) => {
-        if (!s.title && !s.body.trim()) return null;
-        const isAllOpps = s.title.toLowerCase().includes("all opportunit");
-        const isTopOpps = s.title.toLowerCase().includes("top opportunit");
-
-        return (
-          <div key={i} className="mb-8">
-            {s.title && (
-              <h2 className="text-lg font-extrabold text-gray-900 mb-4 pb-2 border-b-2 border-gray-100">
-                {s.title}
-              </h2>
-            )}
-
-            {isAllOpps && grants.length > 0 ? (
-              grants.map((g) => <GrantCard key={g.id} grant={g} />)
-            ) : isTopOpps ? (
-              <div className="border-l-4 border-green-600 bg-green-50 rounded-r-xl px-4 py-3">
-                {renderBodyLines(s.body, true)}
-              </div>
-            ) : (
-              renderBodyLines(s.body, false)
-            )}
-          </div>
-        );
-      })}
-
-      {/* Business name attribution */}
-      <div className="text-xs text-gray-400 mt-4">
-        Report prepared for {businessName}
-      </div>
-    </div>
-  );
-}
+};
 
 export default function DashboardPage() {
-  const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
+  const router = useRouter();
   const [userData, setUserData] = useState<UserData | null>(null);
-  const [selectedReport, setSelectedReport] = useState<GrantReport | null>(
-    null
-  );
-  const [error, setError] = useState("");
-  const [cancelConfirm, setCancelConfirm] = useState(false);
-  const [canceling, setCanceling] = useState(false);
-  const [cancelSuccess, setCancelSuccess] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [cancelState, setCancelState] = useState<"idle" | "confirming" | "loading" | "done">("idle");
+  const [cancelBanner, setCancelBanner] = useState("");
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [signingOut, setSigningOut] = useState(false);
 
-  const handleLookup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-    try {
-      const res = await fetch(
-        `/api/dashboard?email=${encodeURIComponent(email)}`
-      );
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "No account found for that email.");
+  useEffect(() => {
+    fetch("/api/dashboard", { credentials: "include" })
+      .then(async (res) => {
+        if (res.status === 401) {
+          router.push("/login");
+          return;
+        }
+        if (!res.ok) {
+          router.push("/login");
+          return;
+        }
+        const data = await res.json();
+        setUserData(data);
         setLoading(false);
-        return;
-      }
-      setUserData(data);
-      if (data.grant_reports?.length > 0) {
-        setSelectedReport(data.grant_reports[0]);
-      }
-      setLoading(false);
-    } catch {
-      setError("Network error. Please try again.");
-      setLoading(false);
-    }
+      })
+      .catch(() => {
+        router.push("/login");
+      });
+  }, [router]);
+
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+    router.push("/login");
   };
 
-  const handleCancel = async () => {
-    setCanceling(true);
+  const handleCancelConfirm = async () => {
+    setCancelState("loading");
     try {
       const res = await fetch("/api/cancel", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        credentials: "include",
       });
-
       if (res.ok) {
-        setCancelConfirm(false);
-        const endDate = userData?.stripe_current_period_end
-          ? new Date(
-              userData.stripe_current_period_end * 1000
-            ).toLocaleDateString("en-US", {
-              month: "long",
-              day: "numeric",
-              year: "numeric",
-            })
-          : "the end of your billing period";
-        setCancelSuccess(
-          `Your subscription has been canceled. You keep access until ${endDate}.`
+        setCancelState("done");
+        setCancelBanner(
+          "Your subscription has been canceled. You'll keep full access until your billing period ends."
         );
         // Refresh user data
-        const refreshRes = await fetch(
-          `/api/dashboard?email=${encodeURIComponent(email)}`
-        );
+        const refreshRes = await fetch("/api/dashboard", { credentials: "include" });
         if (refreshRes.ok) {
           const data = await refreshRes.json();
           setUserData(data);
         }
       } else {
-        setError("Failed to cancel. Please email support@grantcrafter.com");
+        setCancelState("idle");
       }
     } catch {
-      setError("Failed to cancel. Please email support@grantcrafter.com");
+      setCancelState("idle");
     }
-    setCanceling(false);
   };
 
-  // Login screen
-  if (!userData) {
+  const handleDownload = async (report: GrantReport) => {
+    setDownloadingId(report.id);
+    try {
+      const res = await fetch(`/api/download-report?reportId=${report.id}`, {
+        credentials: "include",
+      });
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `grant-report-${report.month}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+    } catch (err) {
+      console.error("Download failed:", err);
+    }
+    setDownloadingId(null);
+  };
+
+  if (loading) {
     return (
-      <main className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
-        <Link href="/" className="flex items-center gap-1 mb-10">
-          <span className="text-2xl font-black text-green-700">Grant</span>
-          <span className="text-2xl font-black text-gray-900">Crafter</span>
-        </Link>
-        <div className="bg-white rounded-3xl shadow-xl p-8 w-full max-w-md">
-          <h1 className="text-2xl font-black text-gray-900 mb-2">
-            Member Dashboard
-          </h1>
-          <p className="text-gray-500 mb-6">
-            Enter your email to access your grant reports.
-          </p>
-          <form onSubmit={handleLookup} className="space-y-4">
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="your@email.com"
-              required
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500"
-            />
-            {error && (
-              <div className="bg-red-50 text-red-700 text-sm px-4 py-3 rounded-lg">
-                {error}
-              </div>
-            )}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-green-700 hover:bg-green-800 disabled:bg-gray-400 text-white font-bold py-4 rounded-xl transition-colors"
-            >
-              {loading ? "Looking up account..." : "Access My Dashboard →"}
-            </button>
-          </form>
-        </div>
+      <main className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#f8fafc" }}>
+        <div className="text-gray-400 text-sm">Loading your dashboard...</div>
       </main>
     );
   }
 
-  const isActive = ["active", "trialing"].includes(
-    userData.subscription_status
-  );
-  const statusLabel =
-    userData.subscription_status === "trialing"
-      ? "Free Trial"
-      : userData.subscription_status === "active"
-      ? "Active"
-      : userData.subscription_status === "canceling"
-      ? "Canceling"
-      : userData.subscription_status;
+  if (!userData) return null;
+
+  const statusBadge = getStatusBadge(userData.subscription_status);
+  const isSubscriptionActive = ["active", "trialing"].includes(userData.subscription_status);
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      {/* Top Nav */}
-      <nav className="bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-10 shadow-sm">
-        <div className="max-w-5xl mx-auto flex items-center gap-3">
-          <Link href="/" className="flex items-center gap-1 mr-2">
+    <main className="min-h-screen" style={{ backgroundColor: "#f8fafc" }}>
+      {/* ── STICKY NAV ── */}
+      <nav className="bg-white border-b border-gray-100 sticky top-0 z-10">
+        <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-0">
             <span className="text-xl font-black text-green-700">Grant</span>
             <span className="text-xl font-black text-gray-900">Crafter</span>
           </Link>
-          <span className="text-gray-700 font-semibold text-sm truncate">
-            {userData.business_name}
-          </span>
-          <span
-            className={`text-xs font-bold px-2.5 py-1 rounded-full flex-shrink-0 ${
-              isActive
-                ? "bg-green-100 text-green-800"
-                : "bg-red-100 text-red-700"
-            }`}
+          <button
+            onClick={handleSignOut}
+            disabled={signingOut}
+            className="text-sm text-gray-500 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 px-4 py-1.5 rounded-full font-medium transition-colors disabled:opacity-50"
           >
-            {statusLabel}
-          </span>
+            {signingOut ? "Signing out..." : "Sign out"}
+          </button>
         </div>
       </nav>
 
-      <div className="max-w-5xl mx-auto px-4 py-6">
-        {/* Cancel success banner */}
-        {cancelSuccess && (
-          <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 mb-6 text-green-800 font-medium text-sm flex items-start gap-2">
-            <span>✅</span>
-            <span>{cancelSuccess}</span>
+      <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
+        {/* ── CANCEL SUCCESS BANNER ── */}
+        {cancelBanner && (
+          <div className="bg-green-50 border border-green-200 rounded-2xl px-5 py-4 text-green-800 text-sm font-medium flex items-start gap-3">
+            <span className="text-lg">✅</span>
+            <span>{cancelBanner}</span>
           </div>
         )}
 
-        {/* Report tabs */}
-        {userData.grant_reports.length > 0 ? (
-          <>
-            <div
-              className="flex overflow-x-auto gap-2 pb-2 mb-6"
-              style={{ scrollbarWidth: "none" }}
-            >
-              {userData.grant_reports.map((report) => (
-                <button
-                  key={report.id}
-                  onClick={() => setSelectedReport(report)}
-                  className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-colors border ${
-                    selectedReport?.id === report.id
-                      ? "bg-green-700 text-white border-green-700"
-                      : "bg-white text-gray-600 border-gray-200 hover:bg-green-50 hover:border-green-300"
-                  }`}
-                >
-                  {formatMonth(report.month)}
-                </button>
-              ))}
+        {/* ── HERO / WELCOME CARD ── */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+          <div className="flex items-start justify-between flex-wrap gap-4">
+            <div>
+              <p className="text-sm text-gray-500 mb-1">👋 Welcome back,</p>
+              <h1 className="text-2xl font-black text-gray-900">
+                {userData.business_name || userData.email}
+              </h1>
+              <p className="text-sm text-gray-400 mt-1">
+                {userData.email}
+                {userData.created_at && (
+                  <> · Member since {formatMemberSince(userData.created_at)}</>
+                )}
+              </p>
             </div>
+            <span className={`text-xs font-bold px-3 py-1.5 rounded-full ${statusBadge.classes}`}>
+              {statusBadge.label}
+            </span>
+          </div>
+        </div>
 
-            {selectedReport && (
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-8">
-                <div className="bg-green-700 text-white px-6 py-4">
-                  <div className="font-bold text-lg">
-                    {formatMonth(selectedReport.month)} Grant Report
-                  </div>
-                  <div className="text-green-200 text-sm">
-                    {userData.business_name}
-                  </div>
-                </div>
-                <div className="p-6">
-                  <ReportView
-                    report={selectedReport}
-                    businessName={userData.business_name}
-                  />
-                </div>
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12 text-center mb-8">
-            <div className="text-4xl mb-4">📋</div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">
-              Your first report is on its way
-            </h3>
-            <p className="text-gray-500">
-              We&apos;re generating your personalized grant report now. You&apos;ll
-              receive it by email shortly.
+        {/* ── REPORTS SECTION ── */}
+        <div>
+          <div className="mb-4">
+            <h2 className="text-xl font-bold text-gray-900">Your Grant Reports</h2>
+            <p className="text-sm text-gray-500 mt-0.5">
+              A new report lands every Monday morning.
             </p>
           </div>
-        )}
 
-        {/* Account section */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
-          <h2 className="text-base font-extrabold text-gray-900 mb-4">
-            Account
-          </h2>
-          <div className="space-y-2 mb-5 text-sm text-gray-600">
-            <div>
-              <span className="font-medium text-gray-700">Email:</span>{" "}
-              {userData.email}
+          {userData.grant_reports.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {userData.grant_reports.map((report) => (
+                <div
+                  key={report.id}
+                  className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col"
+                >
+                  {/* Document icon */}
+                  <div className="mb-4">
+                    <div className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center text-2xl">
+                      📄
+                    </div>
+                  </div>
+
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">
+                    {formatReportPeriod(report.month)}
+                  </h3>
+
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-green-700 bg-green-50 px-3 py-1 rounded-full self-start mb-4">
+                    <span>✓</span> Delivered
+                  </span>
+
+                  <div className="mt-auto">
+                    <button
+                      onClick={() => handleDownload(report)}
+                      disabled={downloadingId === report.id}
+                      className="w-full bg-green-700 hover:bg-green-800 disabled:bg-green-400 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors"
+                    >
+                      {downloadingId === report.id ? (
+                        <>
+                          <span className="animate-spin">⟳</span>
+                          Generating PDF...
+                        </>
+                      ) : (
+                        <>
+                          <span>↓</span>
+                          Download PDF
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
-            <div>
-              <span className="font-medium text-gray-700">Subscription:</span>{" "}
-              <span
-                className={`font-semibold ${
-                  isActive ? "text-green-700" : "text-red-600"
-                }`}
-              >
-                {statusLabel}
+          ) : (
+            /* Empty state */
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center">
+              <div className="w-14 h-14 bg-green-50 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
+                📋
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">
+                Your first report is on its way
+              </h3>
+              <p className="text-sm text-gray-500 max-w-xs mx-auto">
+                We&apos;re generating your personalized grant report right now. You&apos;ll receive
+                it by email — and it&apos;ll appear here — shortly.
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* ── ACCOUNT & BILLING SECTION ── */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+          <h2 className="text-lg font-bold text-gray-900 mb-4">Account &amp; Billing</h2>
+          <div className="space-y-2 text-sm mb-5">
+            <div className="flex gap-3">
+              <span className="text-gray-500 w-20 flex-shrink-0">Email</span>
+              <span className="text-gray-900 font-medium">{userData.email}</span>
+            </div>
+            <div className="flex gap-3">
+              <span className="text-gray-500 w-20 flex-shrink-0">Status</span>
+              <span className={`font-semibold ${isSubscriptionActive ? "text-green-700" : "text-gray-600"}`}>
+                {statusBadge.label}
               </span>
             </div>
           </div>
 
-          {(userData.subscription_status === "active" ||
-            userData.subscription_status === "trialing") && (
+          {/* Cancel subscription */}
+          {isSubscriptionActive && cancelState !== "done" && (
             <>
-              {!cancelConfirm ? (
+              {cancelState === "idle" && (
                 <button
-                  onClick={() => setCancelConfirm(true)}
-                  className="text-sm text-red-500 hover:text-red-700 underline"
+                  onClick={() => setCancelState("confirming")}
+                  className="text-sm text-red-500 hover:text-red-700 underline transition-colors"
                 >
                   Cancel subscription
                 </button>
-              ) : (
-                <div className="bg-red-50 border border-red-100 rounded-xl p-4 max-w-sm">
-                  <p className="text-sm text-red-700 font-medium mb-3">
-                    Are you sure? You&apos;ll lose access at the end of your
-                    billing period.
+              )}
+
+              {(cancelState === "confirming" || cancelState === "loading") && (
+                <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 max-w-sm">
+                  <p className="text-sm font-semibold text-gray-900 mb-1">
+                    Are you sure you want to cancel?
+                  </p>
+                  <p className="text-sm text-gray-500 mb-4">
+                    You&apos;ll keep access until the end of your billing period.
                   </p>
                   <div className="flex gap-2">
                     <button
-                      onClick={handleCancel}
-                      disabled={canceling}
-                      className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white text-sm font-bold py-2 rounded-lg transition-colors"
+                      onClick={handleCancelConfirm}
+                      disabled={cancelState === "loading"}
+                      className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-red-300 disabled:cursor-not-allowed text-white text-sm font-bold py-2.5 rounded-xl transition-colors"
                     >
-                      {canceling ? "Canceling..." : "Yes, cancel"}
+                      {cancelState === "loading" ? "Canceling..." : "Yes, cancel my subscription"}
                     </button>
                     <button
-                      onClick={() => setCancelConfirm(false)}
-                      className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium py-2 rounded-lg transition-colors"
+                      onClick={() => setCancelState("idle")}
+                      disabled={cancelState === "loading"}
+                      className="flex-1 bg-white hover:bg-gray-100 text-gray-700 text-sm font-medium py-2.5 rounded-xl border border-gray-200 transition-colors"
                     >
                       Never mind
                     </button>
