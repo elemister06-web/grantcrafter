@@ -6,7 +6,6 @@ import Anthropic from "@anthropic-ai/sdk";
 import { Resend } from "resend";
 import { buildGrantPrompt, BusinessProfile } from "@/lib/prompt";
 import { trackUsage } from "@/lib/track-usage";
-import { buildReportPDF } from "@/lib/pdf-report";
 import { buildSimpleEmail } from "@/app/api/generate-report/route";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
@@ -106,13 +105,8 @@ async function generateFirstReport(userId: string, profile: BusinessProfile, ema
       year: "numeric",
     });
     const periodLabel = monthLabel;
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "";
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.grantcrafter.com";
 
-    // Build PDF
-    const pdfBytes = await buildReportPDF(reportContent, profile.businessName, periodLabel);
-    const slugifiedPeriod = periodLabel.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-
-    // Welcome email body — simple format with welcome intro
     const welcomeHtml = `<!DOCTYPE html>
 <html>
 <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:600px;margin:0 auto;background:#f9fafb;">
@@ -120,13 +114,11 @@ async function generateFirstReport(userId: string, profile: BusinessProfile, ema
     <div style="font-size:26px;font-weight:900;color:white;">Grant<span style="color:#bbf7d0;">Crafter</span></div>
   </div>
   <div style="background:white;padding:36px 32px;text-align:center;">
-    <div style="font-size:40px;margin-bottom:16px;">🎉</div>
-    <h1 style="color:#111827;font-size:22px;margin:0 0 12px;">Welcome to GrantCrafter!</h1>
-    <p style="color:#6b7280;font-size:16px;margin:0 0 8px;">Prepared for <strong style="color:#111827;">${profile.businessName}</strong></p>
+    <h1 style="color:#111827;font-size:24px;margin:0 0 12px;">Welcome to GrantCrafter!</h1>
+    <p style="color:#6b7280;font-size:16px;margin:0 0 6px;">Your first grant report for <strong style="color:#111827;">${profile.businessName}</strong> is ready.</p>
     <p style="color:#9ca3af;font-size:14px;margin:0 0 28px;">${periodLabel}</p>
-    <p style="color:#374151;font-size:16px;margin:0 0 16px;">Your first grant report is attached as a PDF. Open it to see all the opportunities we found for your business.</p>
-    <p style="color:#374151;font-size:15px;margin:0 0 28px;">Going forward, a fresh report arrives every Monday.</p>
-    <a href="${appUrl}/dashboard" style="background:#15803d;color:white;padding:14px 32px;border-radius:8px;font-weight:700;text-decoration:none;display:inline-block;font-size:16px;">View Dashboard →</a>
+    <p style="color:#374151;font-size:16px;line-height:1.6;margin:0 0 28px;">Log in to your dashboard to view and download your personalized grant report. A fresh report will arrive every Monday.</p>
+    <a href="${appUrl}/login" style="background:#15803d;color:white;padding:14px 32px;border-radius:8px;font-weight:700;text-decoration:none;display:inline-block;font-size:16px;">View My Report →</a>
   </div>
   <div style="background:#1f2937;padding:20px 24px;text-align:center;">
     <p style="color:#9ca3af;font-size:12px;margin:0;">GrantCrafter · For informational purposes only · Not a guarantee of grant eligibility<br>
@@ -138,16 +130,9 @@ async function generateFirstReport(userId: string, profile: BusinessProfile, ema
     await resend.emails.send({
       from: process.env.RESEND_FROM_EMAIL || "reports@grantcrafter.com",
       to: email,
-      subject: "Welcome to GrantCrafter — Your First Report is Attached",
-      text: `Welcome to GrantCrafter!\n\nYour first grant report for ${profile.businessName} is attached as a PDF.\n\nPeriod: ${periodLabel}\n\nGoing forward, a fresh report arrives every Monday.\n\nView your dashboard: ${appUrl}/dashboard\n\n---\nGrantCrafter · For informational purposes only`,
+      subject: "Welcome to GrantCrafter — Your First Report is Ready",
+      text: `Welcome to GrantCrafter!\n\nYour first grant report for ${profile.businessName} is ready.\n\nLog in to view and download it: ${appUrl}/login\n\nA fresh report arrives every Monday.\n\n---\nGrantCrafter · For informational purposes only`,
       html: welcomeHtml,
-      attachments: [
-        {
-          filename: `GrantCrafter-Report-${slugifiedPeriod}.pdf`,
-          content: Buffer.from(pdfBytes).toString("base64"),
-          contentType: "application/pdf",
-        },
-      ],
     });
   } catch (err) {
     console.error("First report generation failed:", err);

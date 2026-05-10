@@ -3,7 +3,6 @@ import Anthropic from "@anthropic-ai/sdk";
 import { supabaseAdmin } from "@/lib/supabase";
 import { buildGrantPrompt, BusinessProfile } from "@/lib/prompt";
 import { trackUsage } from "@/lib/track-usage";
-import { buildReportPDF } from "@/lib/pdf-report";
 import { Resend } from "resend";
 
 export const maxDuration = 60; // Vercel max for Hobby plan
@@ -83,32 +82,17 @@ export async function POST(req: NextRequest) {
       console.error("Report save error:", reportError);
     }
 
-    // Build period label and PDF
-    const monthLabel = new Date().toLocaleString("en-US", {
-      month: "long",
-      year: "numeric",
-    });
+    const monthLabel = new Date().toLocaleString("en-US", { month: "long", year: "numeric" });
     const periodLabel = monthLabel;
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "";
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.grantcrafter.com";
 
-    const pdfBytes = await buildReportPDF(reportContent, profile.businessName, periodLabel);
-
-    const slugifiedPeriod = periodLabel.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-
-    // Send email with PDF attachment
+    // Send clean email — PDF available to download from dashboard
     await resend.emails.send({
       from: process.env.RESEND_FROM_EMAIL || "reports@grantcrafter.com",
       to: user.email,
       subject: `Your Grant Report is Ready — ${periodLabel}`,
-      text: `Hi,\n\nYour GrantCrafter grant report for ${profile.businessName} is attached as a PDF.\n\nPeriod: ${periodLabel}\n\nView your dashboard: ${appUrl}/dashboard\n\n---\nGrantCrafter · For informational purposes only`,
+      text: `Hi,\n\nYour GrantCrafter grant report for ${profile.businessName} is ready.\n\nLog in to view and download your report: ${appUrl}/dashboard\n\n---\nGrantCrafter · For informational purposes only`,
       html: buildSimpleEmail(profile.businessName, periodLabel, appUrl),
-      attachments: [
-        {
-          filename: `GrantCrafter-Report-${slugifiedPeriod}.pdf`,
-          content: Buffer.from(pdfBytes).toString("base64"),
-          contentType: "application/pdf",
-        },
-      ],
     });
 
     return NextResponse.json({ success: true, reportId: report?.id });

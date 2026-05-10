@@ -5,7 +5,6 @@ import Anthropic from "@anthropic-ai/sdk";
 import { Resend } from "resend";
 import { buildGrantPrompt, BusinessProfile } from "@/lib/prompt";
 import { trackUsage } from "@/lib/track-usage";
-import { buildReportPDF } from "@/lib/pdf-report";
 import { buildSimpleEmail } from "@/app/api/generate-report/route";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
@@ -97,23 +96,12 @@ export async function GET(req: NextRequest) {
         const periodLabel = `Week of ${weekLabel}`;
         const appUrl = process.env.NEXT_PUBLIC_APP_URL || "";
 
-        // Build PDF
-        const pdfBytes = await buildReportPDF(reportContent, user.business_name, periodLabel);
-        const slugifiedPeriod = periodLabel.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-
         await resend.emails.send({
           from: process.env.RESEND_FROM_EMAIL || "reports@grantcrafter.com",
           to: user.email,
-          subject: `Your Weekly Grant Report — ${periodLabel}`,
-          text: `Hi,\n\nYour GrantCrafter grant report for ${user.business_name} is attached as a PDF.\n\nPeriod: ${periodLabel}\n\nView your dashboard: ${appUrl}/dashboard\n\n---\nGrantCrafter · For informational purposes only`,
+          subject: `Your Weekly Grant Report is Ready — ${periodLabel}`,
+          text: `Hi,\n\nYour GrantCrafter grant report for ${user.business_name} is ready.\n\nLog in to view and download it: ${appUrl}/login\n\n---\nGrantCrafter · For informational purposes only`,
           html: buildSimpleEmail(user.business_name, periodLabel, appUrl),
-          attachments: [
-            {
-              filename: `GrantCrafter-Report-${slugifiedPeriod}.pdf`,
-              content: Buffer.from(pdfBytes).toString("base64"),
-              contentType: "application/pdf",
-            },
-          ],
         });
 
         results.success++;

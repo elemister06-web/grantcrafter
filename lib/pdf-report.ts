@@ -1,4 +1,4 @@
-import { PDFDocument, rgb, StandardFonts, PDFPage, PDFFont } from "pdf-lib";
+import { PDFDocument, rgb, StandardFonts, PDFPage, PDFFont, PDFString, PDFName } from "pdf-lib";
 
 // Color constants
 const GREEN = rgb(0.082, 0.502, 0.239); // #15803d
@@ -20,6 +20,46 @@ const HEADER_HEIGHT = 80;
 const SLIM_HEADER_HEIGHT = 40;
 const FOOTER_HEIGHT = 20;
 const BOTTOM_BOUNDARY = MARGIN_BOTTOM + FOOTER_HEIGHT + 20;
+
+const LINK_BLUE = rgb(0.082, 0.502, 0.239); // use brand green for links
+
+// Extract first URL from a string
+function extractURL(text: string): string | null {
+  const match = text.match(/https?:\/\/[^\s)>]+/);
+  return match ? match[0] : null;
+}
+
+// Add a clickable URI annotation over a rect on the page
+function addLinkAnnotation(
+  pdfDoc: PDFDocument,
+  page: PDFPage,
+  url: string,
+  x: number,
+  y: number,
+  width: number,
+  height: number
+) {
+  const linkAnnot = pdfDoc.context.obj({
+    Type: PDFName.of("Annot"),
+    Subtype: PDFName.of("Link"),
+    Rect: [x, y, x + width, y + height],
+    Border: [0, 0, 0],
+    A: pdfDoc.context.obj({
+      Type: PDFName.of("Action"),
+      S: PDFName.of("URI"),
+      URI: PDFString.of(url),
+    }),
+  });
+  const annotRef = pdfDoc.context.register(linkAnnot);
+  const annotsKey = PDFName.of("Annots");
+  const existing = page.node.get(annotsKey);
+  if (existing && "push" in existing) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (existing as any).push(annotRef);
+  } else {
+    page.node.set(annotsKey, pdfDoc.context.obj([annotRef]));
+  }
+}
 
 // Strip characters outside WinAnsi range (pdf-lib standard fonts only support Latin-1)
 function sanitize(text: string): string {
@@ -272,13 +312,15 @@ export async function buildReportPDF(
       let fieldText = "";
       let valueText = "";
       if (colonIdx > 0) {
-        fieldText = content.slice(0, colonIdx + 1); // includes colon
+        fieldText = content.slice(0, colonIdx + 1);
         valueText = content.slice(colonIdx + 1).trim();
       } else {
         valueText = content;
       }
 
-      // Measure and wrap the combined line
+      // Detect URL in value
+      const detectedURL = extractURL(valueText);
+
       const bullet = "• ";
       const fullLine = bullet + (fieldText ? fieldText + " " : "") + valueText;
       const wrappedLines = wrapText(fullLine, regularFont, 10, CONTENT_WIDTH - 10);
@@ -298,25 +340,55 @@ export async function buildReportPDF(
             font: boldFont,
             color: DARK,
           });
-          // Draw value portion
+          // Draw value — check if it contains a URL
           const remainingValue = lineText.slice(bulletAndField.length);
           if (remainingValue) {
-            page.drawText(sanitize(remainingValue), {
-              x: MARGIN_LEFT + 8 + bfWidth,
-              y,
-              size: 10,
-              font: regularFont,
-              color: GRAY,
-            });
+            const urlInValue = extractURL(remainingValue);
+            if (urlInValue && li === 0) {
+              // Split: text before URL, URL, text after URL
+              const urlStart = remainingValue.indexOf(urlInValue);
+              const beforeURL = remainingValue.slice(0, urlStart);
+              const afterURL = remainingValue.slice(urlStart + urlInValue.length);
+              let xCursor = MARGIN_LEFT + 8 + bfWidth;
+              if (beforeURL) {
+                page.drawText(sanitize(beforeURL), { x: xCursor, y, size: 10, font: regularFont, color: GRAY });
+                xCursor += regularFont.widthOfTextAtSize(beforeURL, 10);
+              }
+              const urlDisplay = urlInValue.length > 50 ? urlInValue.slice(0, 47) + "..." : urlInValue;
+              const urlWidth = regularFont.widthOfTextAtSize(urlDisplay, 10);
+              page.drawText(sanitize(urlDisplay), { x: xCursor, y, size: 10, font: regularFont, color: LINK_BLUE });
+              page.drawLine({ start: { x: xCursor, y: y - 1 }, end: { x: xCursor + urlWidth, y: y - 1 }, thickness: 0.5, color: LINK_BLUE });
+              addLinkAnnotation(pdfDoc, page, urlInValue, xCursor, y - 2, urlWidth, 12);
+              if (afterURL) {
+                page.drawText(sanitize(afterURL), { x: xCursor + urlWidth, y, size: 10, font: regularFont, color: GRAY });
+              }
+            } else {
+              page.drawText(sanitize(remainingValue), { x: MARGIN_LEFT + 8 + bfWidth, y, size: 10, font: regularFont, color: GRAY });
+            }
           }
         } else {
-          page.drawText(sanitize(lineText), {
-            x: MARGIN_LEFT + 8,
-            y,
-            size: 10,
-            font: regularFont,
-            color: li === 0 ? DARK : GRAY,
-          });
+          // Continuation lines or plain bullets — check for URL
+          const urlInLine = extractURL(lineText);
+          if (urlInLine) {
+            const urlStart = lineText.indexOf(urlInLine);
+            const before = lineText.slice(0, urlStart);
+            const after = lineText.slice(urlStart + urlInLine.length);
+            let xCursor = MARGIN_LEFT + 8;
+            if (before) {
+              page.drawText(sanitize(before), { x: xCursor, y, size: 10, font: regularFont, color: li === 0 ? DARK : GRAY });
+              xCursor += regularFont.widthOfTextAtSize(before, 10);
+            }
+            const urlDisplay = urlInLine.length > 55 ? urlInLine.slice(0, 52) + "..." : urlInLine;
+            const urlWidth = regularFont.widthOfTextAtSize(urlDisplay, 10);
+            page.drawText(sanitize(urlDisplay), { x: xCursor, y, size: 10, font: regularFont, color: LINK_BLUE });
+            page.drawLine({ start: { x: xCursor, y: y - 1 }, end: { x: xCursor + urlWidth, y: y - 1 }, thickness: 0.5, color: LINK_BLUE });
+            addLinkAnnotation(pdfDoc, page, urlInLine, xCursor, y - 2, urlWidth, 12);
+            if (after) {
+              page.drawText(sanitize(after), { x: xCursor + urlWidth, y, size: 10, font: regularFont, color: GRAY });
+            }
+          } else {
+            page.drawText(sanitize(lineText), { x: MARGIN_LEFT + 8, y, size: 10, font: regularFont, color: li === 0 ? DARK : GRAY });
+          }
         }
         y -= 14;
       }
