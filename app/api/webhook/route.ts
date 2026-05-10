@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase";
+import { Resend } from "resend";
 import Stripe from "stripe";
+
+const resend = new Resend(process.env.RESEND_API_KEY!);
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
@@ -41,6 +44,47 @@ export async function POST(req: NextRequest) {
           if (error) {
             console.error("Supabase upsert error:", error);
           }
+
+          // Send signup confirmation email
+          const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.grantcrafter.com";
+          await resend.emails.send({
+            from: process.env.RESEND_FROM_EMAIL || "reports@grantcrafter.com",
+            to: email,
+            subject: "Welcome to GrantCrafter — You're in!",
+            html: `
+<!DOCTYPE html>
+<html>
+<body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:600px;margin:0 auto;background:#f9fafb;">
+  <div style="background:#15803d;padding:32px 24px;text-align:center;">
+    <div style="font-size:28px;font-weight:900;color:white;">Grant<span style="color:#bbf7d0;">Crafter</span></div>
+    <div style="color:#bbf7d0;margin-top:8px;font-size:16px;">Your free trial has started</div>
+  </div>
+  <div style="background:white;padding:32px 24px;">
+    <h1 style="color:#111827;font-size:22px;margin:0 0 12px;">You're in! 🎉</h1>
+    <p style="color:#374151;margin:0 0 16px;line-height:1.6;">
+      Thanks for signing up for GrantCrafter. Your 7-day free trial is now active — no charge until your trial ends.
+    </p>
+    <p style="color:#374151;margin:0 0 24px;line-height:1.6;">
+      <strong>Next step:</strong> Complete your business profile so we can generate your personalized grant report. It only takes 2 minutes.
+    </p>
+    <div style="text-align:center;margin-bottom:24px;">
+      <a href="${appUrl}/dashboard" style="background:#16a34a;color:white;padding:14px 32px;border-radius:8px;font-weight:700;text-decoration:none;display:inline-block;font-size:16px;">
+        Complete My Profile →
+      </a>
+    </div>
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px;font-size:14px;color:#166534;">
+      ℹ️ Once your profile is submitted, we'll generate your first personalized grant report and deliver it to this email address.
+    </div>
+  </div>
+  <div style="background:#1f2937;padding:20px 24px;text-align:center;">
+    <p style="color:#9ca3af;font-size:12px;margin:0;">
+      GrantCrafter · for informational purposes only · not a guarantee of award eligibility<br>
+      Questions? Reply to this email.
+    </p>
+  </div>
+</body>
+</html>`,
+          }).catch((err) => console.error("Confirmation email failed:", err));
         }
         break;
       }
