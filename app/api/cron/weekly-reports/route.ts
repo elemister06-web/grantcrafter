@@ -7,6 +7,7 @@ import { buildGrantPrompt, BusinessProfile } from "@/lib/prompt";
 import { trackUsage } from "@/lib/track-usage";
 import { buildSimpleEmail } from "@/app/api/generate-report/route";
 import { validateAndCleanReport } from "@/lib/validate-grant-links";
+import { fixKnownBadUrls } from "@/lib/known-good-urls";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 const resend = new Resend(process.env.RESEND_API_KEY!);
@@ -82,8 +83,9 @@ export async function GET(req: NextRequest) {
 
         trackUsage("grant-report-weekly", message.usage as unknown as Parameters<typeof trackUsage>[1]).catch(() => {});
 
-        // Validate and strip dead links before saving
-        const { cleanedContent: reportContent, log: linkLog } = await validateAndCleanReport(rawContent);
+        // Fix known-bad URLs first, then validate and strip any remaining dead links
+        const fixedContent = fixKnownBadUrls(rawContent);
+        const { cleanedContent: reportContent, log: linkLog } = await validateAndCleanReport(fixedContent);
         const deadLinks = linkLog.filter((l) => l.status === "dead").length;
         if (deadLinks > 0) console.log(`[weekly-reports] Removed ${deadLinks} dead link(s) for user ${user.id}`);
 

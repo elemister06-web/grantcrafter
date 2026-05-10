@@ -3,7 +3,12 @@
  * Validates all URLs in a grant report before saving.
  * Strips confirmed-dead links (404/410) so customers never see broken "Apply Now" buttons.
  * Government sites that block automated checks are kept as-is (they're real, just firewalled).
+ *
+ * NOTE: fixKnownBadUrls() is called automatically at the start of validateAndCleanReport()
+ * so known-bad patterns are corrected before any HTTP checks run.
  */
+
+import { fixKnownBadUrls } from "@/lib/known-good-urls";
 
 const TIMEOUT_MS = 6000;
 const DEFINITELY_DEAD = [404, 410];
@@ -47,12 +52,16 @@ async function checkUrl(url: string): Promise<"valid" | "dead" | "blocked"> {
 
 /**
  * Validates all URLs found in a report and removes confirmed-dead links.
+ * Automatically applies fixKnownBadUrls() before HTTP checks.
  * Returns the cleaned report content + a log of what was found.
  */
-export async function validateAndCleanReport(content: string): Promise<{
+export async function validateAndCleanReport(rawContent: string): Promise<{
   cleanedContent: string;
   log: { url: string; status: "valid" | "dead" | "blocked" }[];
 }> {
+  // Fix known-bad patterns before any HTTP checks run
+  const content = fixKnownBadUrls(rawContent);
+
   const urlRegex = /https?:\/\/[^\s)\]>,"]+/g;
   const urls = Array.from(new Set(content.match(urlRegex) || []));
   const log: { url: string; status: "valid" | "dead" | "blocked" }[] = [];
