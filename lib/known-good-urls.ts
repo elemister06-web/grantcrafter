@@ -89,9 +89,16 @@ const KNOWN_BAD_PATTERNS: Array<{
     description: "Ohio state trade expansion (removed program) → dept homepage",
   },
   {
-    pattern: /https?:\/\/(?:www\.)?verizon\.com\/business\/small-business\/digital-ready[^\s)\]>,"']*/g,
+    // Catches ALL verizon.com digital-ready path variants — all 404
+    pattern: /https?:\/\/(?:www\.)?verizon\.com\/(?:business\/)?(?:resources\/)?(?:small-business\/)?digital-ready[^\s)\]>,"']*/g,
     replacement: "https://digitalready.verizonwireless.com/funding",
-    description: "Verizon old Digital Ready path → dedicated landing page",
+    description: "Any verizon.com digital-ready path → confirmed working URL",
+  },
+  {
+    // Also catch verizonwireless.com without /funding path
+    pattern: /https?:\/\/(?:www\.)?verizonwireless\.com\/(?!funding)[^\s)\]>,"']*digital-ready[^\s)\]>,"']*/g,
+    replacement: "https://digitalready.verizonwireless.com/funding",
+    description: "Verizonwireless.com digital-ready without /funding → correct path",
   },
   {
     // Ohio SBDC — cert error on ohiosbdc.ohio.gov; real site is ohiosbdc.net
