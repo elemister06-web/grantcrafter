@@ -88,6 +88,7 @@ export default function DashboardPage() {
   const [linkValidity, setLinkValidity] = useState<Record<string, boolean>>({});
   const [validatingLinks, setValidatingLinks] = useState(false);
   const [activeTab, setActiveTab] = useState<"all" | "applied" | "dismissed">("all");
+  const [expandedSlug, setExpandedSlug] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/dashboard", { credentials: "include" })
@@ -313,11 +314,6 @@ export default function DashboardPage() {
                 <p className="text-3xl font-black text-white">{appliedGrants.length}</p>
                 <p className="text-emerald-300 text-xs font-medium mt-0.5">Applied</p>
               </div>
-              <div className="w-px h-8 bg-white/20" />
-              <div>
-                <p className="text-3xl font-black text-white">{userData.grant_reports.length}</p>
-                <p className="text-emerald-300 text-xs font-medium mt-0.5">Reports</p>
-              </div>
             </div>
           )}
         </div>
@@ -400,8 +396,11 @@ export default function DashboardPage() {
                             isDismissed ? "opacity-60 border-gray-100" : isApplied ? "border-emerald-200" : "border-gray-100 hover:border-gray-200 hover:shadow-md"
                           }`}
                         >
-                          {/* Card header */}
-                          <div className="px-5 pt-5 pb-0">
+                          {/* Clickable card header */}
+                          <button
+                            className="px-5 pt-5 pb-4 text-left w-full"
+                            onClick={() => setExpandedSlug(expandedSlug === grant.slug ? null : grant.slug)}
+                          >
                             {/* Badges row */}
                             <div className="flex items-center gap-2 mb-3 flex-wrap">
                               {isApplied && (
@@ -420,6 +419,9 @@ export default function DashboardPage() {
                                   {grant.amount}
                                 </span>
                               )}
+                              <span className="ml-auto text-gray-300 text-xs">
+                                {expandedSlug === grant.slug ? "▲ Less" : "▼ Details"}
+                              </span>
                             </div>
 
                             {/* Grant name */}
@@ -436,18 +438,44 @@ export default function DashboardPage() {
 
                             {/* Deadline */}
                             {grant.deadline && (
-                              <p className="text-xs font-semibold text-amber-600 mb-3 flex items-center gap-1">
+                              <p className="text-xs font-semibold text-amber-600 flex items-center gap-1">
                                 <span>📅</span> {grant.deadline}
                               </p>
                             )}
 
-                            {/* What it funds */}
-                            {grant.whatItFunds && (
-                              <p className="text-sm text-gray-500 line-clamp-3 mb-4 leading-relaxed">
-                                {grant.whatItFunds}
-                              </p>
-                            )}
-                          </div>
+                            {/* Summary — collapsed view */}
+                            {!expandedSlug || expandedSlug !== grant.slug ? (
+                              grant.whatItFunds && (
+                                <p className="text-sm text-gray-500 line-clamp-2 mt-2 leading-relaxed">
+                                  {grant.whatItFunds}
+                                </p>
+                              )
+                            ) : null}
+                          </button>
+
+                          {/* Expanded detail panel */}
+                          {expandedSlug === grant.slug && (
+                            <div className="px-5 pb-4 space-y-3 border-t border-gray-50 pt-4">
+                              {grant.whatItFunds && (
+                                <div>
+                                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">What It Funds</p>
+                                  <p className="text-sm text-gray-700 leading-relaxed">{grant.whatItFunds}</p>
+                                </div>
+                              )}
+                              {grant.howToApply && (
+                                <div>
+                                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">How to Apply</p>
+                                  <p className="text-sm text-gray-700 leading-relaxed">{grant.howToApply}</p>
+                                </div>
+                              )}
+                              {grant.proTip && (
+                                <div className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">
+                                  <p className="text-xs font-bold text-amber-700 uppercase tracking-wide mb-1">💡 Pro Tip</p>
+                                  <p className="text-sm text-amber-800 leading-relaxed">{grant.proTip}</p>
+                                </div>
+                              )}
+                            </div>
+                          )}
 
                           {/* Card footer */}
                           <div className="mt-auto border-t border-gray-50 px-5 py-4 flex items-center justify-between gap-3">
@@ -480,14 +508,14 @@ export default function DashboardPage() {
                               ) : (
                                 <>
                                   <button
-                                    onClick={() => dismissGrant(grant, selectedReport.id)}
+                                    onClick={(e) => { e.stopPropagation(); dismissGrant(grant, selectedReport.id); }}
                                     title="Not interested"
                                     className="text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 text-gray-400 hover:border-red-300 hover:text-red-500 transition-colors font-medium"
                                   >
                                     ✕
                                   </button>
                                   <button
-                                    onClick={() => toggleApplied(grant, selectedReport.id)}
+                                    onClick={(e) => { e.stopPropagation(); toggleApplied(grant, selectedReport.id); }}
                                     className={`text-sm px-4 py-1.5 rounded-lg transition-all font-semibold ${
                                       isApplied
                                         ? "text-white"
