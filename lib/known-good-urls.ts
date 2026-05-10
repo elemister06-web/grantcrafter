@@ -93,6 +93,18 @@ const KNOWN_BAD_PATTERNS: Array<{
     replacement: "https://digitalready.verizonwireless.com/funding",
     description: "Verizon old Digital Ready path → dedicated landing page",
   },
+  {
+    // Ohio SBDC — cert error on ohiosbdc.ohio.gov; real site is ohiosbdc.net
+    pattern: /https?:\/\/(?:www\.)?ohiosbdc\.ohio\.gov[^\s)\]>,"']*/g,
+    replacement: "https://www.ohiosbdc.net/",
+    description: "Ohio SBDC broken cert domain → correct domain",
+  },
+  {
+    // Old Ohio SBDC path variant
+    pattern: /https?:\/\/(?:www\.)?ohiosbdc\.net\/find-sbdc[^\s)\]>,"']*/g,
+    replacement: "https://www.ohiosbdc.net/",
+    description: "Ohio SBDC old path → homepage",
+  },
 ];
 
 // FedEx Small Business Grant — program retired; remove entire grant block

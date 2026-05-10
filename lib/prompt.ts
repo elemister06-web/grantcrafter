@@ -95,7 +95,7 @@ FEDERAL:
 
 OHIO STATE:
 - Ohio Dept of Development: https://development.ohio.gov/
-- Ohio SBDC (find a center): https://www.ohiosbdc.ohio.gov/find-sbdc
+- Ohio SBDC (find a center): https://www.ohiosbdc.net/
 - Ohio TechCred: https://techcred.ohio.gov
 - Ohio Third Frontier: https://thirdfrontier.com/
 - Ohio Minority Micro-Enterprise Program: https://development.ohio.gov/business
