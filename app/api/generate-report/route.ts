@@ -128,7 +128,7 @@ export function buildSimpleEmail(
   </div>
   <div style="background:#1f2937;padding:20px 24px;text-align:center;">
     <p style="color:#9ca3af;font-size:12px;margin:0;">GrantCrafter · For informational purposes only · Not a guarantee of grant eligibility<br>
-    <a href="${appUrl}/refund" style="color:#6b7280;">Request a refund</a> · <a href="${appUrl}/privacy" style="color:#6b7280;">Privacy Policy</a></p>
+    <a href="mailto:support@grantcrafter.com" style="color:#6b7280;">Support</a> · <a href="${appUrl}/privacy" style="color:#6b7280;">Privacy Policy</a></p>
   </div>
 </body>
 </html>`;

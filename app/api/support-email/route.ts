@@ -36,42 +36,33 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ received: true, skipped: "auto-reply" });
     }
 
-    // Generate AI response with Claude
-    const aiResponse = await anthropic.messages.create({
-      model: "claude-sonnet-4-6",
-      max_tokens: 1000,
-      messages: [
-        {
-          role: "user",
-          content: `You are a friendly, professional customer support agent for GrantCrafter (grantcrafter.com) — an AI-powered monthly grant discovery service for small businesses and nonprofits. The service costs $49/month with a 7-day free trial and can be cancelled anytime.
+    // Detect refund requests — send the refund page link directly
+    const bodyLower = (emailBody + subject).toLowerCase();
+    const isRefundRequest = [
+      "refund", "money back", "cancel", "charge back", "chargeback",
+      "not satisfied", "not happy", "disappointed", "didn't work", "doesn't work",
+    ].some(kw => bodyLower.includes(kw));
 
-A customer named "${fromName}" sent this support email:
+    let replyText: string;
 
-Subject: ${subject}
-
-Message:
-${emailBody}
-
-Write a helpful, warm, and concise support reply. Key information:
-- GrantCrafter delivers personalized monthly grant reports based on the customer's business profile
-- Reports are sent on the 1st of each month via email
-- Customers can view all past reports in their dashboard at grantcrafter.com/dashboard
-- For billing/cancellation: they can cancel anytime from the dashboard
-- 7-day money-back guarantee on first charge
-- We do NOT guarantee grant awards — we are a research/discovery service
-- If they have account issues, they can reply to this email
-
-Keep your reply under 200 words. Be warm but professional. Do not make up specific grant details. Sign off as "The GrantCrafter Team".
-
-Do not include a subject line — just write the email body.`,
-        },
-      ],
-    });
-
-    const replyText =
-      aiResponse.content[0].type === "text"
+    if (isRefundRequest) {
+      replyText = `Hi ${fromName},\n\nThank you for reaching out. We're sorry the report didn't meet your expectations — we want to make this right.\n\nTo process your refund, please use our quick refund form here:\n\nhttps://www.grantcrafter.com/refund\n\nIt takes about 60 seconds. Your feedback also helps us improve the product for future customers, so we genuinely appreciate it.\n\nYour refund will be processed within 5–7 business days once submitted.\n\nThe GrantCrafter Team`;
+    } else {
+      // Generate AI response with Claude for all other support emails
+      const aiResponse = await anthropic.messages.create({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1000,
+        messages: [
+          {
+            role: "user",
+            content: `You are a friendly, professional customer support agent for GrantCrafter (grantcrafter.com) — an AI-powered grant research service for small businesses. The service is $19.99 per report, one-time payment, no subscription or account required. Reports are delivered by email within 2-3 minutes of payment.\n\nA customer named "${fromName}" sent this support email:\n\nSubject: ${subject}\n\nMessage:\n${emailBody}\n\nWrite a helpful, warm, and concise support reply. Key information:\n- GrantCrafter delivers up to 25 personalized grant opportunities matched to the customer's business profile\n- Report is delivered by email within 2-3 minutes of payment\n- 7-day money-back guarantee — no questions asked\n- We do NOT guarantee grant awards — we are a research/discovery service\n\nKeep your reply under 200 words. Be warm but professional. Sign off as "The GrantCrafter Team".\n\nDo not include a subject line — just write the email body.`,
+          },
+        ],
+      });
+      replyText = aiResponse.content[0].type === "text"
         ? aiResponse.content[0].text
         : "Thank you for reaching out! Our team will get back to you shortly.";
+    }
 
     // Send the reply
     await resend.emails.send({
