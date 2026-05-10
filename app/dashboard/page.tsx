@@ -388,40 +388,40 @@ export default function DashboardPage() {
                       const isDismissed = dismissedSet.has(grant.slug);
                       const matchColor = grant.matchScore ? getMatchColor(grant.matchScore) : null;
                       const urlValid = grant.applyUrl ? linkValidity[grant.applyUrl] ?? true : null;
+                      const isExpanded = expandedSlug === grant.slug;
+                      const borderColor = isDismissed ? "#e5e7eb" : isApplied ? "#6ee7b7" : matchColor?.dot === "bg-emerald-500" ? "#10b981" : matchColor?.dot === "bg-amber-500" ? "#f59e0b" : "#e5e7eb";
 
                       return (
                         <div
                           key={grant.slug}
-                          className={`bg-white rounded-2xl border shadow-sm flex flex-col transition-all ${
-                            isDismissed ? "opacity-60 border-gray-100" : isApplied ? "border-emerald-200" : "border-gray-100 hover:border-gray-200 hover:shadow-md"
+                          className={`bg-white rounded-2xl shadow-sm flex flex-col transition-all overflow-hidden ${
+                            isDismissed ? "opacity-50" : isExpanded ? "shadow-md" : "hover:shadow-md"
                           }`}
+                          style={{ border: "1px solid #e5e7eb", borderLeft: `4px solid ${borderColor}` }}
                         >
-                          {/* Clickable card header */}
+                          {/* Card top — always visible */}
                           <button
                             className="px-5 pt-5 pb-4 text-left w-full"
-                            onClick={() => setExpandedSlug(expandedSlug === grant.slug ? null : grant.slug)}
+                            onClick={() => setExpandedSlug(isExpanded ? null : grant.slug)}
                           >
-                            {/* Badges row */}
-                            <div className="flex items-center gap-2 mb-3 flex-wrap">
+                            {/* Top row: amount (prominent) + match badge */}
+                            <div className="flex items-start justify-between gap-2 mb-3">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                {matchColor && grant.matchScore && (
+                                  <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full ${matchColor.bg} ${matchColor.text}`}>
+                                    <span className={`w-1.5 h-1.5 rounded-full ${matchColor.dot}`} />
+                                    {grant.matchScore} Match
+                                  </span>
+                                )}
+                                {grant.type && (
+                                  <span className="text-xs text-gray-400 font-medium">{grant.type}</span>
+                                )}
+                              </div>
                               {isApplied && (
-                                <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-full border border-emerald-200">
+                                <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-full border border-emerald-200 flex-shrink-0">
                                   ✓ Applied
                                 </span>
                               )}
-                              {matchColor && grant.matchScore && (
-                                <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${matchColor.bg} ${matchColor.text}`}>
-                                  <span className={`w-1.5 h-1.5 rounded-full ${matchColor.dot}`} />
-                                  {grant.matchScore} Match
-                                </span>
-                              )}
-                              {grant.amount && (
-                                <span className="bg-gray-50 text-gray-600 text-xs font-semibold px-2.5 py-1 rounded-full border border-gray-100">
-                                  {grant.amount}
-                                </span>
-                              )}
-                              <span className="ml-auto text-gray-300 text-xs">
-                                {expandedSlug === grant.slug ? "▲ Less" : "▼ Details"}
-                              </span>
                             </div>
 
                             {/* Grant name */}
@@ -429,47 +429,56 @@ export default function DashboardPage() {
                               {grant.name}
                             </h3>
 
-                            {/* Org + Type */}
-                            {(grant.organization || grant.type) && (
-                              <p className="text-sm text-gray-400 mb-2">
-                                {[grant.organization, grant.type].filter(Boolean).join(" · ")}
+                            {/* Org */}
+                            {grant.organization && (
+                              <p className="text-xs text-gray-400 mb-3">{grant.organization}</p>
+                            )}
+
+                            {/* Amount + Deadline row */}
+                            <div className="flex items-center gap-3 flex-wrap">
+                              {grant.amount && (
+                                <span className="text-sm font-black" style={{ color: "#15803d" }}>
+                                  {grant.amount}
+                                </span>
+                              )}
+                              {grant.amount && grant.deadline && <span className="text-gray-200 text-xs">/</span>}
+                              {grant.deadline && (
+                                <span className="text-xs font-semibold text-amber-600 flex items-center gap-1">
+                                  📅 {grant.deadline}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Summary — collapsed */}
+                            {!isExpanded && grant.whatItFunds && (
+                              <p className="text-sm text-gray-500 line-clamp-2 mt-3 leading-relaxed">
+                                {grant.whatItFunds}
                               </p>
                             )}
 
-                            {/* Deadline */}
-                            {grant.deadline && (
-                              <p className="text-xs font-semibold text-amber-600 flex items-center gap-1">
-                                <span>📅</span> {grant.deadline}
-                              </p>
-                            )}
-
-                            {/* Summary — collapsed view */}
-                            {!expandedSlug || expandedSlug !== grant.slug ? (
-                              grant.whatItFunds && (
-                                <p className="text-sm text-gray-500 line-clamp-2 mt-2 leading-relaxed">
-                                  {grant.whatItFunds}
-                                </p>
-                              )
-                            ) : null}
+                            {/* Expand toggle */}
+                            <p className="text-xs text-gray-400 mt-3 font-medium">
+                              {isExpanded ? "▲ Hide details" : "▼ View full details"}
+                            </p>
                           </button>
 
-                          {/* Expanded detail panel */}
-                          {expandedSlug === grant.slug && (
-                            <div className="px-5 pb-4 space-y-3 border-t border-gray-50 pt-4">
+                          {/* Expanded panel */}
+                          {isExpanded && (
+                            <div className="px-5 pb-1 space-y-4 border-t border-gray-50 pt-4">
                               {grant.whatItFunds && (
                                 <div>
-                                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">What It Funds</p>
+                                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1.5">What It Funds</p>
                                   <p className="text-sm text-gray-700 leading-relaxed">{grant.whatItFunds}</p>
                                 </div>
                               )}
                               {grant.howToApply && (
                                 <div>
-                                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">How to Apply</p>
+                                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1.5">How to Apply</p>
                                   <p className="text-sm text-gray-700 leading-relaxed">{grant.howToApply}</p>
                                 </div>
                               )}
                               {grant.proTip && (
-                                <div className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">
+                                <div className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 mb-2">
                                   <p className="text-xs font-bold text-amber-700 uppercase tracking-wide mb-1">💡 Pro Tip</p>
                                   <p className="text-sm text-amber-800 leading-relaxed">{grant.proTip}</p>
                                 </div>
@@ -478,56 +487,56 @@ export default function DashboardPage() {
                           )}
 
                           {/* Card footer */}
-                          <div className="mt-auto border-t border-gray-50 px-5 py-4 flex items-center justify-between gap-3">
-                            {/* Apply link */}
-                            {grant.applyUrl && urlValid !== false ? (
-                              <a
-                                href={grant.applyUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-sm font-semibold flex items-center gap-1 transition-colors"
-                                style={{ color: "#15803d" }}
+                          <div className="mt-auto px-5 py-4 flex items-center gap-3">
+                            {/* Primary CTA */}
+                            {isDismissed ? (
+                              <button
+                                onClick={() => restoreGrant(grant, selectedReport.id)}
+                                className="flex-1 text-sm font-semibold px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:border-emerald-400 hover:text-emerald-700 transition-colors"
                               >
-                                Apply Now →
-                              </a>
-                            ) : grant.applyUrl && urlValid === false ? (
-                              <span className="text-xs text-gray-400 italic">Link unavailable</span>
+                                Restore Grant
+                              </button>
                             ) : (
-                              <span className="text-xs text-gray-400">See your report for details</span>
-                            )}
+                              <>
+                                {grant.applyUrl && urlValid !== false ? (
+                                  <a
+                                    href={grant.applyUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex-1 text-center text-sm font-bold px-4 py-2.5 rounded-xl text-white transition-colors"
+                                    style={{ background: "#15803d" }}
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    Apply Now →
+                                  </a>
+                                ) : (
+                                  <span className="flex-1 text-center text-xs text-gray-400 py-2.5 italic">
+                                    {urlValid === false ? "Link unavailable" : "Search grant name to apply"}
+                                  </span>
+                                )}
 
-                            {/* Action buttons */}
-                            <div className="flex items-center gap-2">
-                              {isDismissed ? (
+                                {/* Secondary actions */}
                                 <button
-                                  onClick={() => restoreGrant(grant, selectedReport.id)}
-                                  className="text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-gray-500 hover:border-emerald-400 hover:text-emerald-700 transition-colors font-medium"
+                                  onClick={(e) => { e.stopPropagation(); toggleApplied(grant, selectedReport.id); }}
+                                  title={isApplied ? "Mark as not applied" : "Mark as applied"}
+                                  className={`p-2.5 rounded-xl border transition-all ${
+                                    isApplied
+                                      ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                                      : "border-gray-200 text-gray-400 hover:border-emerald-300 hover:text-emerald-600"
+                                  }`}
+                                  title={isApplied ? "Applied" : "Mark applied"}
                                 >
-                                  Restore
+                                  {isApplied ? "✓" : "✓"}
                                 </button>
-                              ) : (
-                                <>
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); dismissGrant(grant, selectedReport.id); }}
-                                    title="Not interested"
-                                    className="text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 text-gray-400 hover:border-red-300 hover:text-red-500 transition-colors font-medium"
-                                  >
-                                    ✕
-                                  </button>
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); toggleApplied(grant, selectedReport.id); }}
-                                    className={`text-sm px-4 py-1.5 rounded-lg transition-all font-semibold ${
-                                      isApplied
-                                        ? "text-white"
-                                        : "border border-gray-200 text-gray-600 hover:border-emerald-500 hover:text-emerald-700"
-                                    }`}
-                                    style={isApplied ? { background: "#15803d" } : {}}
-                                  >
-                                    {isApplied ? "✓ Applied" : "Mark Applied"}
-                                  </button>
-                                </>
-                              )}
-                            </div>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); dismissGrant(grant, selectedReport.id); }}
+                                  title="Not interested"
+                                  className="p-2.5 rounded-xl border border-gray-200 text-gray-400 hover:border-red-200 hover:text-red-400 transition-all"
+                                >
+                                  ✕
+                                </button>
+                              </>
+                            )}
                           </div>
                         </div>
                       );
