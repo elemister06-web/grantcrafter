@@ -12,13 +12,13 @@ function HomeContent() {
     <div style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", color: "#111827" }}>
 
       {/* Nav */}
-      <nav style={{ background: "#ffffff", borderBottom: "1px solid #e5e7eb", padding: "0 24px", position: "sticky", top: 0, zIndex: 50 }}>
-        <div style={{ maxWidth: "1080px", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: "64px" }}>
+      <nav style={{ background: "#ffffff", borderBottom: "1px solid #e5e7eb", padding: "0 16px", position: "sticky", top: 0, zIndex: 50 }}>
+        <div style={{ maxWidth: "1080px", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: "60px" }}>
           <Logo size="md" href="/" />
-          <div style={{ display: "flex", alignItems: "center", gap: "28px" }}>
-            <a href="#how-it-works" style={{ color: "#6b7280", textDecoration: "none", fontSize: "14px", fontWeight: "500" }}>How It Works</a>
-            <a href="#pricing" style={{ color: "#6b7280", textDecoration: "none", fontSize: "14px", fontWeight: "500" }}>Pricing</a>
-            <a href="/get-report" style={{ background: "#15803d", color: "#ffffff", padding: "10px 20px", borderRadius: "8px", textDecoration: "none", fontSize: "14px", fontWeight: "700" }}>Get My Report →</a>
+          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+            <a href="#how-it-works" style={{ color: "#6b7280", textDecoration: "none", fontSize: "14px", fontWeight: "500", whiteSpace: "nowrap" }} className="hidden-mobile">How It Works</a>
+            <a href="#pricing" style={{ color: "#6b7280", textDecoration: "none", fontSize: "14px", fontWeight: "500", whiteSpace: "nowrap" }} className="hidden-mobile">Pricing</a>
+            <a href="/get-report" style={{ background: "#15803d", color: "#ffffff", padding: "9px 16px", borderRadius: "8px", textDecoration: "none", fontSize: "14px", fontWeight: "700", whiteSpace: "nowrap" }}>Get My Report →</a>
           </div>
         </div>
       </nav>

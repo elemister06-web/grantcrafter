@@ -52,3 +52,10 @@ html {
 .btn-secondary:hover {
   background: var(--brand-green-light);
 }
+
+/* Nav: hide text links on mobile, keep CTA button */
+@media (max-width: 600px) {
+  .hidden-mobile {
+    display: none;
+  }
+}
