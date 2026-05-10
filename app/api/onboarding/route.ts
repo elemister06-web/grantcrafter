@@ -131,7 +131,7 @@ async function generateFirstReport(userId: string, profile: BusinessProfile, ema
       <strong>${monthLabel} Grant Report</strong> for <strong>${profile.businessName}</strong>.
     </p>
     <p style="color:#6b7280;margin:0 0 20px;">
-      Going forward, a new report will arrive in your inbox on the 1st of every month.
+      Going forward, a fresh report will arrive in your inbox every Monday.
     </p>
     <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px;margin-bottom:24px;font-size:14px;color:#166534;">
       ℹ️ <strong>Reminder:</strong> This report identifies opportunities based on your profile. Grant awards are always determined by the granting organization. We recommend applying to every opportunity that looks like a strong fit.

@@ -39,10 +39,10 @@ export default function ThankYouPage() {
               <span className="text-green-600 text-lg font-bold">✓</span>
               <div>
                 <div className="font-semibold text-gray-900">
-                  Monthly reports on the 1st
+                  Weekly reports every Monday
                 </div>
                 <div className="text-sm text-gray-500">
-                  Fresh opportunities every month, automatically
+                  Fresh opportunities every week, automatically
                 </div>
               </div>
             </div>

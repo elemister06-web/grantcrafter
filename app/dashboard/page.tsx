@@ -76,6 +76,15 @@ export default function DashboardPage() {
   };
 
   const formatMonth = (month: string) => {
+    // Handle ISO week format "2026-W19" and legacy month format "2026-05"
+    if (month.includes("-W")) {
+      const [year, week] = month.split("-W");
+      // Find the Monday of that ISO week
+      const jan4 = new Date(parseInt(year), 0, 4);
+      const startOfWeek = new Date(jan4);
+      startOfWeek.setDate(jan4.getDate() - (jan4.getDay() || 7) + 1 + (parseInt(week) - 1) * 7);
+      return `Week of ${startOfWeek.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`;
+    }
     const [year, m] = month.split("-");
     const date = new Date(parseInt(year), parseInt(m) - 1);
     return date.toLocaleString("en-US", { month: "long", year: "numeric" });
@@ -198,7 +207,7 @@ export default function DashboardPage() {
           </h2>
           {userData.grant_reports.length === 0 ? (
             <div className="text-sm text-gray-500 bg-white rounded-xl p-4 border border-gray-200">
-              Your first report is being generated and will arrive by email within 24 hours.
+              Your first report is being generated and will arrive by email shortly.
             </div>
           ) : (
             userData.grant_reports.map((report) => (
@@ -286,7 +295,7 @@ export default function DashboardPage() {
                 Your first report is on its way
               </h3>
               <p className="text-gray-500">
-                We&apos;re generating your personalized grant report now. You&apos;ll receive it by email within 24 hours.
+                We&apos;re generating your personalized grant report now. You&apos;ll receive it by email shortly.
               </p>
             </div>
           )}

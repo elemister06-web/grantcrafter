@@ -26,7 +26,7 @@ export default function HomePage() {
       <section className="bg-gradient-to-b from-green-50 to-white py-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-block bg-green-100 text-green-800 font-semibold text-sm px-4 py-1.5 rounded-full mb-6">
-            🔍 AI-powered grant research, delivered monthly
+            🔍 AI-powered grant research, delivered weekly
           </div>
           <h1 className="text-5xl md:text-6xl font-black text-gray-900 leading-tight mb-6">
             Stop Missing Grants
@@ -40,7 +40,7 @@ export default function HomePage() {
           </p>
           <p className="text-lg text-gray-500 mb-10">
             No more endless Googling. No grant consultants charging $500/hour.
-            Just your opportunities, curated monthly.
+            Just your opportunities, curated weekly.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
@@ -102,7 +102,7 @@ export default function HomePage() {
             How GrantCrafter Works
           </h2>
           <p className="text-xl text-gray-600 text-center mb-14">
-            Set it up once. Get your report every month.
+            Set it up once. Get your report every week.
           </p>
           <div className="space-y-8">
             {[
@@ -119,7 +119,7 @@ export default function HomePage() {
               {
                 step: "3",
                 title: "Receive your personalized report",
-                body: "On the 1st of each month, you get a curated list of grants you may qualify for — with amounts, deadlines, requirements, and direct application links.",
+                body: "Every Monday, you get a curated list of grants you may qualify for — with amounts, deadlines, requirements, and direct application links.",
               },
               {
                 step: "4",
@@ -264,7 +264,7 @@ export default function HomePage() {
                 "Federal, state, local & private grant sources",
                 "Matched to your business profile & qualifiers",
                 "Direct application links & deadlines",
-                "Email delivery on the 1st of every month",
+                "Email delivery every Monday",
                 "Members-only dashboard with past reports",
                 "7-day free trial",
                 "Cancel anytime — no contracts",
@@ -306,7 +306,7 @@ export default function HomePage() {
               },
               {
                 q: "How is this different from just Googling grants?",
-                a: "Generic searches return outdated, one-size-fits-all lists. GrantCrafter cross-references your specific business profile — type, industry, location, size, ownership qualifiers — to surface programs more likely to match your situation. We also track new opportunities each month.",
+                a: "Generic searches return outdated, one-size-fits-all lists. GrantCrafter cross-references your specific business profile — type, industry, location, size, ownership qualifiers — to surface programs more likely to match your situation. We also track new opportunities each week.",
               },
               {
                 q: "What if the grants in my report don't fit my business?",
