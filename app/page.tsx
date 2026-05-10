@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import Logo from "@/components/Logo";
 
 function HomeContent() {
   const params = useSearchParams();
@@ -14,7 +15,7 @@ function HomeContent() {
       {/* Nav */}
       <nav style={{ background: "#ffffff", borderBottom: "1px solid #e5e7eb", padding: "0 24px", position: "sticky", top: 0, zIndex: 50 }}>
         <div style={{ maxWidth: "1080px", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: "64px" }}>
-          <div style={{ fontSize: "22px", fontWeight: "900", color: "#15803d" }}>🌿 GrantCrafter</div>
+          <Logo size="md" href="/" />
           <div style={{ display: "flex", alignItems: "center", gap: "32px" }}>
             <a href="#how-it-works" style={{ color: "#6b7280", textDecoration: "none", fontSize: "14px", fontWeight: "500" }}>How It Works</a>
             <a href="#pricing" style={{ color: "#6b7280", textDecoration: "none", fontSize: "14px", fontWeight: "500" }}>Pricing</a>
@@ -40,7 +41,7 @@ function HomeContent() {
             Find Grants Your Business<br />Actually Qualifies For
           </h1>
           <p style={{ color: "#bbf7d0", fontSize: "18px", lineHeight: "1.6", margin: "0 0 40px", maxWidth: "560px", marginLeft: "auto", marginRight: "auto" }}>
-            Tell us about your business. Pay once. Get a personalized report of 8–10 real grant opportunities in your inbox within minutes.
+            Tell us about your business. Pay once. Get a personalized report of up to 20+ real grant opportunities in your inbox within minutes.
           </p>
           <a
             href="/get-report"
@@ -89,7 +90,7 @@ function HomeContent() {
             </p>
             <ul style={{ margin: "0", padding: "0", listStyle: "none" }}>
               {[
-                "8–10 real grant opportunities matched to your profile",
+                "Up to 20+ grant opportunities matched to your profile",
                 "Federal, state, local, and private foundation grants",
                 "Award amounts, deadlines, and eligibility requirements",
                 'Direct "Apply Now" links for each grant',
@@ -106,7 +107,7 @@ function HomeContent() {
           {/* Sample report preview */}
           <div style={{ background: "#f9fafb", borderRadius: "16px", border: "1px solid #e5e7eb", padding: "24px", overflow: "hidden" }}>
             <div style={{ background: "#15803d", borderRadius: "8px", padding: "16px", marginBottom: "16px" }}>
-              <div style={{ color: "#ffffff", fontWeight: "800", fontSize: "15px", marginBottom: "4px" }}>🌿 GrantCrafter Report</div>
+              <div style={{ color: "#ffffff", fontWeight: "800", fontSize: "15px", marginBottom: "4px" }}>GrantCrafter Report</div>
               <div style={{ color: "#bbf7d0", fontSize: "12px" }}>Sample · Small Business · Cincinnati, OH</div>
             </div>
             {[
@@ -137,7 +138,7 @@ function HomeContent() {
             <div style={{ color: "#6b7280", fontSize: "16px", margin: "8px 0 32px" }}>one-time payment</div>
             <ul style={{ textAlign: "left", margin: "0 0 32px", padding: "0", listStyle: "none" }}>
               {[
-                "8–10 personalized grant opportunities",
+                "Up to 20+ personalized grant opportunities",
                 "Federal, state, local & private grants",
                 "Award amounts & deadlines",
                 "Direct Apply Now links",
@@ -206,7 +207,7 @@ function HomeContent() {
         <div style={{ maxWidth: "900px", margin: "0 auto" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "24px", marginBottom: "32px" }}>
             <div>
-              <div style={{ fontSize: "20px", fontWeight: "800", color: "#ffffff", marginBottom: "8px" }}>🌿 GrantCrafter</div>
+              <div style={{ fontSize: "20px", fontWeight: "800", color: "#ffffff", marginBottom: "8px" }}>GrantCrafter</div>
               <div style={{ fontSize: "14px", lineHeight: "1.6", maxWidth: "280px" }}>AI-powered grant research for small businesses. Find real opportunities, fast.</div>
             </div>
             <div style={{ display: "flex", gap: "32px" }}>

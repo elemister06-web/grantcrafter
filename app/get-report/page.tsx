@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Logo from "@/components/Logo";
 
 const QUALIFIERS = [
   { value: "woman-owned", label: "Woman-owned" },
@@ -78,7 +79,7 @@ export default function GetReportPage() {
       {/* Nav */}
       <nav style={{ background: "#ffffff", borderBottom: "1px solid #e5e7eb", padding: "0 24px" }}>
         <div style={{ maxWidth: "960px", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: "64px" }}>
-          <a href="/" style={{ textDecoration: "none", fontSize: "20px", fontWeight: "800", color: "#15803d" }}>🌿 GrantCrafter</a>
+          <a href="/" style={{ textDecoration: "none" }}><Logo size="md" /></a>
           <a href="/" style={{ color: "#6b7280", textDecoration: "none", fontSize: "14px" }}>← Back to Home</a>
         </div>
       </nav>
