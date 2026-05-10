@@ -15,6 +15,9 @@ export default function HomePage() {
             <Link href="#pricing" className="text-gray-600 hover:text-gray-900 font-medium hidden md:block">
               Pricing
             </Link>
+            <Link href="/login" className="text-gray-600 hover:text-gray-900 font-medium hidden md:block border border-gray-200 px-4 py-2 rounded-lg hover:border-gray-400 transition-colors">
+              Log In
+            </Link>
             <Link href="/signup" className="bg-green-700 hover:bg-green-800 text-white font-bold px-5 py-2.5 rounded-lg transition-colors">
               Start Free Trial
             </Link>
@@ -34,13 +37,13 @@ export default function HomePage() {
             <span className="text-green-700">Your Business Qualifies For</span>
           </h1>
           <p className="text-xl text-gray-600 mb-4 max-w-2xl mx-auto">
-            Every month, GrantCrafter&apos;s AI researches federal, state, local,
+            Every week, GrantCrafter&apos;s AI researches federal, state, local,
             and private grants — and delivers a personalized list of opportunities
             matched to <strong>your specific business profile</strong>.
           </p>
           <p className="text-lg text-gray-500 mb-10">
             No more endless Googling. No grant consultants charging $500/hour.
-            Just your opportunities, curated weekly.
+            Just your opportunities, curated weekly — and tracked in your own private dashboard.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
@@ -119,12 +122,12 @@ export default function HomePage() {
               {
                 step: "3",
                 title: "Receive your personalized report",
-                body: "Every Monday, you get a curated list of grants you may qualify for — with amounts, deadlines, requirements, and direct application links.",
+                body: "Every Monday, a fresh report lands in your inbox and on your dashboard — with amounts, deadlines, requirements, and direct application links. Mark grants as applied, dismiss ones that don't fit, and track your progress.",
               },
               {
                 step: "4",
-                title: "Apply directly",
-                body: "Use your report to prioritize which grants to apply for. Every opportunity links directly to the official source.",
+                title: "Apply and track your progress",
+                body: "Apply directly through each grant's official link. Your dashboard lets you mark grants as applied, hide ones that don't fit, and keep a running record of your efforts — all in one place.",
               },
             ].map((item) => (
               <div key={item.step} className="flex gap-6 items-start">
@@ -145,7 +148,7 @@ export default function HomePage() {
       <section className="py-20 px-4">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-4xl font-black text-gray-900 text-center mb-4">
-            What Your Monthly Report Looks Like
+            What Your Weekly Report Looks Like
           </h2>
           <p className="text-xl text-gray-600 text-center mb-4">
             Real grant programs. Real amounts. Real deadlines. Matched to your profile.
@@ -260,12 +263,12 @@ export default function HomePage() {
             <div className="text-gray-500 mb-8">per month · cancel anytime</div>
             <ul className="text-left space-y-3 mb-8">
               {[
-                "Monthly personalized grant research report",
+                "Weekly personalized grant research report",
                 "Federal, state, local & private grant sources",
                 "Matched to your business profile & qualifiers",
                 "Direct application links & deadlines",
-                "Email delivery every Monday",
-                "Members-only dashboard with past reports",
+                "Members-only dashboard — track, apply, and dismiss grants",
+                "Update your business profile anytime for better matches",
                 "7-day free trial",
                 "Cancel anytime — no contracts",
               ].map((feature) => (
