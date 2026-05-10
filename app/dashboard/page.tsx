@@ -524,7 +524,6 @@ export default function DashboardPage() {
                                       ? "bg-emerald-50 border-emerald-200 text-emerald-700"
                                       : "border-gray-200 text-gray-400 hover:border-emerald-300 hover:text-emerald-600"
                                   }`}
-                                  title={isApplied ? "Applied" : "Mark applied"}
                                 >
                                   {isApplied ? "✓" : "✓"}
                                 </button>
