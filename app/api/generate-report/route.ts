@@ -6,6 +6,8 @@ import { trackUsage } from "@/lib/track-usage";
 import { buildReportPDF } from "@/lib/pdf-report";
 import { Resend } from "resend";
 
+export const maxDuration = 60; // Vercel max for Hobby plan
+
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
