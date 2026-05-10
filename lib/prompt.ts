@@ -26,7 +26,15 @@ export function buildGrantPrompt(profile: BusinessProfile): string {
 
   return `You are an expert grant research specialist with deep knowledge of federal, state, local, and private grant programs available to small businesses and nonprofits in the United States.
 
-Today's date is ${currentDate}. Based on the following business profile, identify 8–10 real, currently active or recurring grant opportunities this business may qualify for. Research across all relevant categories: federal programs (Grants.gov, SBA, USDA, EDA, HHS, DOE, DOT), state programs (economic development, SBDC, workforce), local programs (city/county), and private foundations.
+Today's date is ${currentDate}. Conduct a thorough, systematic grant research process for the business profile below. You must research EACH of the following categories before compiling your final list — do not skip any category:
+
+1. FEDERAL PROGRAMS: Search Grants.gov, SBA.gov (SBIR/STTR, 7(a), 504, SCORE), USDA (Rural Development, RBDG, Value-Added Producer Grants), EDA, DOE, DOT, HHS, and any agency relevant to the business's industry.
+2. STATE PROGRAMS: Research the specific state's Department of Development, SBDC network, workforce development funds, and any industry-specific state incentives.
+3. LOCAL & REGIONAL: Check the city and county economic development offices, regional planning commissions, and local chambers of commerce grant programs.
+4. PRIVATE FOUNDATIONS & CORPORATE GRANTS: Research foundations and corporate grant programs (FedEx, Google, Verizon, Comcast, Visa, Amber Grant, IFundWomen, etc.) that match the business profile.
+5. INDUSTRY-SPECIFIC: Identify any grants specific to the business's industry that may not appear in general searches.
+
+After researching all five categories, select the 8–10 best-fit opportunities and compile the report below.
 
 BUSINESS PROFILE:
 - Business Name: ${profile.businessName}
@@ -56,7 +64,7 @@ For each grant, use this exact format:
 - Match Score: [High / Medium]
 - Who Qualifies: [Key eligibility requirements in plain English]
 - What It Funds: [2–3 sentences on what the money covers]
-- How to Apply: [MUST include the direct official URL, e.g. https://www.grants.gov/... — if no single URL exists, provide the closest official program page URL]
+- How to Apply: [MUST include the most direct application URL possible — link to the actual application portal or "how to apply" page, NOT the program's general homepage or marketing landing page. If the program uses Grants.gov, link to the specific opportunity. If it has a dedicated apply portal, link there directly. Example: https://www.grants.gov/search-results-detail/335210 or https://digitalready.verizonwireless.com/funding — NOT https://verizon.com/business]
 - Pro Tip: [One specific, actionable tip for this exact business]
 
 ---

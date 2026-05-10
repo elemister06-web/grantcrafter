@@ -68,6 +68,15 @@ const getStatusBadge = (status: string) => {
   }
 };
 
+const getTypeBadge = (type: string) => {
+  const t = type.toLowerCase();
+  if (t.includes("federal")) return { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-100" };
+  if (t.includes("state")) return { bg: "bg-purple-50", text: "text-purple-700", border: "border-purple-100" };
+  if (t.includes("local")) return { bg: "bg-orange-50", text: "text-orange-700", border: "border-orange-100" };
+  if (t.includes("private") || t.includes("foundation")) return { bg: "bg-teal-50", text: "text-teal-700", border: "border-teal-100" };
+  return { bg: "bg-gray-50", text: "text-gray-500", border: "border-gray-100" };
+};
+
 const getMatchColor = (score: string) => {
   const lower = score.toLowerCase();
   if (lower.includes("high")) return { bg: "bg-emerald-50", text: "text-emerald-700", dot: "bg-emerald-500" };
@@ -413,9 +422,14 @@ export default function DashboardPage() {
                                     {grant.matchScore} Match
                                   </span>
                                 )}
-                                {grant.type && (
-                                  <span className="text-xs text-gray-400 font-medium">{grant.type}</span>
-                                )}
+                                {grant.type && (() => {
+                                  const tb = getTypeBadge(grant.type);
+                                  return (
+                                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${tb.bg} ${tb.text} ${tb.border}`}>
+                                      {grant.type}
+                                    </span>
+                                  );
+                                })()}
                               </div>
                               {isApplied && (
                                 <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-full border border-emerald-200 flex-shrink-0">
