@@ -29,7 +29,7 @@ export default function HomePage() {
       <section className="bg-gradient-to-b from-green-50 to-white py-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-block bg-green-100 text-green-800 font-semibold text-sm px-4 py-1.5 rounded-full mb-6">
-            🔍 AI-powered grant research, delivered weekly
+            🤖 100% automated · New grants every Monday · Zero effort required
           </div>
           <h1 className="text-5xl md:text-6xl font-black text-gray-900 leading-tight mb-6">
             Stop Missing Grants
@@ -37,13 +37,13 @@ export default function HomePage() {
             <span className="text-green-700">Your Business Qualifies For</span>
           </h1>
           <p className="text-xl text-gray-600 mb-4 max-w-2xl mx-auto">
-            Every week, GrantCrafter&apos;s AI researches federal, state, local,
-            and private grants — and delivers a personalized list of opportunities
-            matched to <strong>your specific business profile</strong>.
+            Set up your profile once. Every Monday, GrantCrafter&apos;s AI automatically
+            researches federal, state, local, and private grants — and drops a fresh,
+            personalized list into <strong>your private dashboard</strong>.
           </p>
           <p className="text-lg text-gray-500 mb-10">
-            No more endless Googling. No grant consultants charging $500/hour.
-            Just your opportunities, curated weekly — and tracked in your own private dashboard.
+            No Googling. No grant consultants at $500/hour. No manual work — ever.
+            Just log in, review your matches, and apply.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
@@ -111,23 +111,23 @@ export default function HomePage() {
             {[
               {
                 step: "1",
-                title: "Tell us about your business",
-                body: "Answer a quick 5-minute profile: business type, industry, location, size, and any special qualifiers (woman-owned, minority-owned, veteran-owned, etc.).",
+                title: "Set up your profile once (5 minutes)",
+                body: "Tell us about your business: type, industry, location, size, and ownership qualifiers (woman-owned, minority-owned, veteran-owned, etc.). You do this once — GrantCrafter handles everything after that.",
               },
               {
                 step: "2",
-                title: "AI researches your opportunities",
-                body: "Our AI scans federal grant programs (Grants.gov, SBA, USDA), state economic development programs, local funds, and private foundations — cross-referenced against your profile.",
+                title: "AI runs automatically every Monday",
+                body: "No action needed from you. Every Monday at 9am, our AI automatically scans federal programs (Grants.gov, SBA, USDA), state economic development funds, local grants, and private foundations — all matched against your exact profile.",
               },
               {
                 step: "3",
-                title: "Receive your personalized report",
-                body: "Every Monday, a fresh report lands in your inbox and on your dashboard — with amounts, deadlines, requirements, and direct application links. Mark grants as applied, dismiss ones that don't fit, and track your progress.",
+                title: "Get notified, then log in to review",
+                body: "You get a simple email: \"Your dashboard has been updated.\" Click in and see this week's fresh grant cards — each with the amount, deadline, match score, and a direct apply link. New opportunities every single week.",
               },
               {
                 step: "4",
-                title: "Apply and track your progress",
-                body: "Apply directly through each grant's official link. Your dashboard lets you mark grants as applied, hide ones that don't fit, and keep a running record of your efforts — all in one place.",
+                title: "Track everything in one place",
+                body: "Mark grants as applied, dismiss ones that don't fit, and watch your progress build over time. Your dashboard keeps a full history — every week's report, every grant you've tracked. All automatic. All organized.",
               },
             ].map((item) => (
               <div key={item.step} className="flex gap-6 items-start">
