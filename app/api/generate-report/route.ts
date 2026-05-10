@@ -101,16 +101,47 @@ export async function POST(req: NextRequest) {
   }
 }
 
+function extractGrantNames(content: string): { name: string; slug: string }[] {
+  const results: { name: string; slug: string }[] = [];
+  const lines = content.split("\n");
+  for (const line of lines) {
+    const match = line.match(/^\*\*([^*]+)\*\*$/);
+    if (match) {
+      const name = match[1].trim();
+      const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      results.push({ name, slug });
+    }
+  }
+  return results;
+}
+
+function buildGrantTOCHTML(grants: { name: string; slug: string }[]): string {
+  if (!grants.length) return "";
+  return `
+<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px;margin-bottom:24px;">
+  <div style="font-weight:700;color:#15803d;margin-bottom:10px;">Jump to a grant:</div>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;">
+    ${grants.map((g) => `<a href="#${g.slug}" style="background:#15803d;color:white;padding:4px 12px;border-radius:20px;font-size:13px;text-decoration:none;">${g.name}</a>`).join("\n    ")}
+  </div>
+</div>`;
+}
+
 function buildEmailHTML(
   reportContent: string,
   businessName: string,
   monthLabel: string
 ): string {
-  // Convert markdown to basic HTML
+  const grantNames = extractGrantNames(reportContent);
+  const tocHTML = buildGrantTOCHTML(grantNames);
+
+  // Convert markdown to basic HTML, wrapping grant name lines in <div id="slug">
   const html = reportContent
     .replace(/^## (.+)$/gm, "<h2 style='color:#15803d;margin-top:24px;'>$1</h2>")
     .replace(/^### (.+)$/gm, "<h3 style='color:#1f2937;'>$1</h3>")
-    .replace(/^\*\*(.+)\*\*$/gm, "<strong>$1</strong>")
+    .replace(/^\*\*([^*\n]+)\*\*$/gm, (_, name) => {
+      const slug = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      return `<div id="${slug}"><strong>${name}</strong></div>`;
+    })
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
     .replace(/^- (.+)$/gm, "<li style='margin-bottom:4px;'>$1</li>")
     .replace(/^---$/gm, "<hr style='border:1px solid #e5e7eb;margin:20px 0;'>")
@@ -142,6 +173,8 @@ function buildEmailHTML(
     <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px;margin-bottom:24px;font-size:14px;color:#166534;">
       ℹ️ <strong>Important:</strong> This report identifies grant opportunities based on your profile. Grant awards are determined solely by the granting organization. Apply to every opportunity that fits — the more you apply, the better your odds.
     </div>
+
+    ${tocHTML}
     
     <div style="color:#374151;line-height:1.7;font-size:15px;">
       <p style="margin:0 0 12px;">${html}</p>

@@ -123,9 +123,26 @@ function buildWeeklyEmailHTML(
   businessName: string,
   weekLabel: string
 ): string {
+  // Extract grant names for TOC
+  const grantNames = reportContent
+    .split("\n")
+    .filter((line) => /^\*\*([^*]+)\*\*$/.test(line))
+    .map((line) => {
+      const name = line.replace(/\*\*/g, "").trim();
+      const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      return { name, slug };
+    });
+  const tocHTML = grantNames.length
+    ? `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px;margin-bottom:24px;"><div style="font-weight:700;color:#15803d;margin-bottom:10px;">Jump to a grant:</div><div style="display:flex;flex-wrap:wrap;gap:8px;">${grantNames.map((g) => `<a href="#${g.slug}" style="background:#15803d;color:white;padding:4px 12px;border-radius:20px;font-size:13px;text-decoration:none;">${g.name}</a>`).join("")}</div></div>`
+    : "";
+
   const html = reportContent
     .replace(/^## (.+)$/gm, "<h2 style='color:#15803d;margin-top:24px;'>$1</h2>")
     .replace(/^### (.+)$/gm, "<h3 style='color:#1f2937;'>$1</h3>")
+    .replace(/^\*\*([^*\n]+)\*\*$/gm, (_, name) => {
+      const slug = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      return `<div id="${slug}"><strong>${name}</strong></div>`;
+    })
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
     .replace(/^- (.+)$/gm, "<li style='margin-bottom:4px;'>$1</li>")
     .replace(/^---$/gm, "<hr style='border:1px solid #e5e7eb;margin:20px 0;'>")
@@ -146,6 +163,7 @@ function buildWeeklyEmailHTML(
     <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:14px;margin:20px 0;font-size:14px;color:#166534;">
       ℹ️ This report identifies opportunities based on your profile. Awards are determined by each granting organization.
     </div>
+    ${tocHTML}
     <div style="color:#374151;line-height:1.7;">${html}</div>
   </div>
   <div style="background:#1f2937;padding:24px;text-align:center;">
