@@ -275,7 +275,7 @@ function HomeContent() {
             { q: "How long does it take?", a: "Usually 2–3 minutes after payment. Our AI researches and compiles your report in real-time." },
             { q: "Do I need to create an account?", a: "No. Just your email address and business details. No login, no password, no dashboard to manage." },
             { q: "How many grants will be in my report?", a: "Most reports include 15–25 grant opportunities. The exact number depends on your business profile — location, industry, size, and ownership qualifiers all affect how many programs you qualify for. Niche industries or very rural areas may yield fewer matches than urban businesses with broader eligibility. Every grant listed is a real program we believe you may qualify for — we never pad reports with irrelevant results." },
-            { q: "What if I\'m not happy with my report?", a: "Email us at support@grantcrafter.com within 7 days and we\'ll refund your payment in full, no questions asked." },
+            { q: "What if I\'m not happy with my report?", a: "Email us at support@grantcrafter.com within 7 days and we\'ll refund your payment in full." },
             { q: "Can I order another report later?", a: "Absolutely. Come back anytime — especially if your business situation changes or you want updated results." },
           ].map((item, i) => (
             <div key={i} style={{ borderBottom: "1px solid #e5e7eb", paddingBottom: "22px", marginBottom: "22px" }}>
