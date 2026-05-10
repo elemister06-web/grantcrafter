@@ -17,7 +17,6 @@ function HomeContent() {
           <Logo size="md" href="/" />
           <div style={{ display: "flex", alignItems: "center", gap: "28px" }}>
             <a href="#how-it-works" style={{ color: "#6b7280", textDecoration: "none", fontSize: "14px", fontWeight: "500" }}>How It Works</a>
-            <a href="#vs" style={{ color: "#6b7280", textDecoration: "none", fontSize: "14px", fontWeight: "500" }}>vs. Alternatives</a>
             <a href="#pricing" style={{ color: "#6b7280", textDecoration: "none", fontSize: "14px", fontWeight: "500" }}>Pricing</a>
             <a href="/get-report" style={{ background: "#15803d", color: "#ffffff", padding: "10px 20px", borderRadius: "8px", textDecoration: "none", fontSize: "14px", fontWeight: "700" }}>Get My Report →</a>
           </div>
@@ -183,47 +182,7 @@ function HomeContent() {
         </div>
       </section>
 
-      {/* vs. Alternatives */}
-      <section id="vs" style={{ padding: "80px 24px", background: "#f9fafb" }}>
-        <div style={{ maxWidth: "800px", margin: "0 auto" }}>
-          <h2 style={{ textAlign: "center", fontSize: "34px", fontWeight: "800", margin: "0 0 12px", color: "#111827" }}>How We Compare</h2>
-          <p style={{ textAlign: "center", color: "#6b7280", fontSize: "17px", margin: "0 0 40px" }}>There's no other service that does exactly what we do.</p>
-          <div style={{ background: "#ffffff", borderRadius: "16px", border: "1px solid #e5e7eb", overflow: "hidden" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "14px" }}>
-              <thead>
-                <tr style={{ background: "#f9fafb" }}>
-                  <th style={{ padding: "14px 20px", textAlign: "left", fontWeight: "700", color: "#374151", borderBottom: "1px solid #e5e7eb" }}>Option</th>
-                  <th style={{ padding: "14px 16px", textAlign: "center", fontWeight: "700", color: "#374151", borderBottom: "1px solid #e5e7eb" }}>Cost</th>
-                  <th style={{ padding: "14px 16px", textAlign: "center", fontWeight: "700", color: "#374151", borderBottom: "1px solid #e5e7eb" }}>Personalized?</th>
-                  <th style={{ padding: "14px 16px", textAlign: "center", fontWeight: "700", color: "#374151", borderBottom: "1px solid #e5e7eb" }}>For-profit biz?</th>
-                  <th style={{ padding: "14px 16px", textAlign: "center", fontWeight: "700", color: "#374151", borderBottom: "1px solid #e5e7eb" }}>Speed</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  { name: "GrantCrafter", cost: "$19.99 once", personal: "✅ Yes", biz: "✅ Yes", speed: "~2 min", highlight: true },
-                  { name: "Grant Consultant", cost: "$300–$500/hr", personal: "✅ Yes", biz: "✅ Yes", speed: "Days/weeks", highlight: false },
-                  { name: "Instrumentl", cost: "$299–$999/mo", personal: "✅ Yes", biz: "❌ Nonprofits", speed: "Ongoing", highlight: false },
-                  { name: "GrantWatch", cost: "$49/mo", personal: "❌ DIY search", biz: "Partial", speed: "DIY", highlight: false },
-                  { name: "Grants.gov", cost: "Free", personal: "❌ DIY search", biz: "Partial", speed: "DIY hours", highlight: false },
-                  { name: "Hello Alice", cost: "Free", personal: "❌ Generic", biz: "✅ Yes", speed: "Ongoing", highlight: false },
-                ].map((row, i) => (
-                  <tr key={i} style={{ background: row.highlight ? "#f0fdf4" : "transparent", borderBottom: "1px solid #f3f4f6" }}>
-                    <td style={{ padding: "14px 20px", fontWeight: row.highlight ? "800" : "500", color: row.highlight ? "#15803d" : "#374151" }}>
-                      {row.highlight && <span style={{ background: "#15803d", color: "#fff", fontSize: "11px", padding: "2px 7px", borderRadius: "4px", marginRight: "8px" }}>YOU</span>}
-                      {row.name}
-                    </td>
-                    <td style={{ padding: "14px 16px", textAlign: "center", fontWeight: row.highlight ? "700" : "400", color: row.highlight ? "#15803d" : "#374151" }}>{row.cost}</td>
-                    <td style={{ padding: "14px 16px", textAlign: "center" }}>{row.personal}</td>
-                    <td style={{ padding: "14px 16px", textAlign: "center" }}>{row.biz}</td>
-                    <td style={{ padding: "14px 16px", textAlign: "center", color: row.highlight ? "#15803d" : "#374151", fontWeight: row.highlight ? "700" : "400" }}>{row.speed}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
+
 
       {/* Pricing */}
       <section id="pricing" style={{ padding: "80px 24px", background: "#ffffff" }}>
