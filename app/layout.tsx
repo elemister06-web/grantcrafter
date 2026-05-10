@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import AuthRedirect from "@/components/AuthRedirect";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.grantcrafter.com"),
@@ -204,7 +205,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
         />
       </head>
-      <body>{children}</body>
+      <body><AuthRedirect />{children}</body>
     </html>
   );
 }
