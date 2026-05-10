@@ -94,8 +94,6 @@ export default function DashboardPage() {
   const [selectedReport, setSelectedReport] = useState<GrantReport | null>(null);
   const [appliedSet, setAppliedSet] = useState<Set<string>>(new Set());
   const [dismissedSet, setDismissedSet] = useState<Set<string>>(new Set());
-  const [linkValidity, setLinkValidity] = useState<Record<string, boolean>>({});
-  const [validatingLinks, setValidatingLinks] = useState(false);
   const [activeTab, setActiveTab] = useState<"all" | "applied" | "dismissed">("all");
   const [expandedSlug, setExpandedSlug] = useState<string | null>(null);
 
@@ -131,39 +129,9 @@ export default function DashboardPage() {
     ));
   }, [selectedReport, userData]);
 
-  // Validate links after grants load
-  const validateLinks = useCallback(async (grants: ParsedGrant[], reportId: string) => {
-    const urls = grants.map((g) => g.applyUrl).filter(Boolean) as string[];
-    if (urls.length === 0) return;
-    setValidatingLinks(true);
-    try {
-      const res = await fetch("/api/validate-url", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ urls }),
-      });
-      if (res.ok) {
-        const { results } = await res.json();
-        setLinkValidity((prev) => ({ ...prev, [reportId]: undefined, ...results }));
-      }
-    } catch {
-      // Silent fail — show links anyway
-    }
-    setValidatingLinks(false);
-  }, []);
-
-  // Trigger link validation when report changes
-  useEffect(() => {
-    if (!selectedReport) return;
-    const grants = parseGrantsFromReport(selectedReport.report_content || "");
-    // Only validate if we haven't already
-    const urls = grants.map((g) => g.applyUrl).filter(Boolean) as string[];
-    const unchecked = urls.filter((u) => !(u in linkValidity));
-    if (unchecked.length > 0) {
-      validateLinks(grants, selectedReport.id);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedReport?.id]);
+  // Link validation is server-side only — removed client-side checks to prevent false negatives
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const validateLinks = useCallback(async (_grants: ParsedGrant[], _reportId: string) => {}, []);
 
   const handleSignOut = async () => {
     setSigningOut(true);
@@ -363,7 +331,7 @@ export default function DashboardPage() {
                     </h2>
                     <p className="text-sm text-gray-400 mt-0.5">
                       {grants.length} grant{grants.length !== 1 ? "s" : ""} found
-                      {validatingLinks && <span className="ml-2 text-gray-300">· Checking links…</span>}
+
                     </p>
                   </div>
                 </div>
@@ -396,7 +364,7 @@ export default function DashboardPage() {
                       const isApplied = appliedSet.has(grant.slug);
                       const isDismissed = dismissedSet.has(grant.slug);
                       const matchColor = grant.matchScore ? getMatchColor(grant.matchScore) : null;
-                      const urlValid = grant.applyUrl ? linkValidity[grant.applyUrl] ?? true : null;
+                      const hasLink = !!grant.applyUrl; // Validated server-side at report generation
                       const isExpanded = expandedSlug === grant.slug;
                       const borderColor = isDismissed ? "#e5e7eb" : isApplied ? "#6ee7b7" : matchColor?.dot === "bg-emerald-500" ? "#10b981" : matchColor?.dot === "bg-amber-500" ? "#f59e0b" : "#e5e7eb";
 
@@ -512,9 +480,9 @@ export default function DashboardPage() {
                               </button>
                             ) : (
                               <>
-                                {grant.applyUrl && urlValid !== false ? (
+                                {hasLink ? (
                                   <a
-                                    href={grant.applyUrl}
+                                    href={grant.applyUrl!}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="flex-1 text-center text-sm font-bold px-4 py-2.5 rounded-xl text-white transition-colors"
@@ -525,7 +493,7 @@ export default function DashboardPage() {
                                   </a>
                                 ) : (
                                   <span className="flex-1 text-center text-xs text-gray-400 py-2.5 italic">
-                                    {urlValid === false ? "Link unavailable" : "Search grant name to apply"}
+                                    Search grant name to apply
                                   </span>
                                 )}
 
