@@ -56,7 +56,7 @@ For each grant, use this exact format:
 - Match Score: [High / Medium]
 - Who Qualifies: [Key eligibility requirements in plain English]
 - What It Funds: [2–3 sentences on what the money covers]
-- How to Apply: [Official URL or clear instructions]
+- How to Apply: [MUST include the direct official URL, e.g. https://www.grants.gov/... — if no single URL exists, provide the closest official program page URL]
 - Pro Tip: [One specific, actionable tip for this exact business]
 
 ---

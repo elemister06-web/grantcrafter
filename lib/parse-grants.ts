@@ -82,7 +82,7 @@ export function parseGrantsFromReport(content: string): ParsedGrant[] {
       else if (field.includes("apply")) {
         current.howToApply = value;
         const m = value.match(/https?:\/\/[^\s)>\]]+/);
-        current.applyUrl = m ? m[0] : null;
+        if (m) current.applyUrl = m[0];
       }
       else if (field.includes("tip")) current.proTip = value;
     }
