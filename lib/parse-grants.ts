@@ -69,7 +69,12 @@ export function parseGrantsFromReport(content: string): ParsedGrant[] {
     if (current && /^- /.test(line)) {
       const body = line.slice(2);
       const colon = body.indexOf(":");
-      if (colon < 1) continue;
+      if (colon < 1) {
+        // No colon — could be a continuation line or bare URL under the previous field
+        const bareUrl = body.trim().match(/^https?:\/\/[^\s)>\]]+/);
+        if (bareUrl && !current.applyUrl) current.applyUrl = bareUrl[0];
+        continue;
+      }
       const field = body.slice(0, colon).toLowerCase().trim();
       const value = body.slice(colon + 1).trim().replace(/\*\*(.+?)\*\*/g, "$1");
 
@@ -81,10 +86,19 @@ export function parseGrantsFromReport(content: string): ParsedGrant[] {
       else if (field.includes("funds") || field.includes("what it")) current.whatItFunds = value;
       else if (field.includes("apply")) {
         current.howToApply = value;
+        // Extract URL from this line
         const m = value.match(/https?:\/\/[^\s)>\]]+/);
         if (m) current.applyUrl = m[0];
       }
-      else if (field.includes("tip")) current.proTip = value;
+      else if (field.includes("tip") || field.includes("pro")) current.proTip = value;
+
+      // Fallback: grab any URL from any field if applyUrl still not set
+      if (!current.applyUrl) {
+        const anyUrl = value.match(/https?:\/\/[^\s)>\]]+/);
+        if (anyUrl && (field.includes("apply") || field.includes("website") || field.includes("url") || field.includes("link"))) {
+          current.applyUrl = anyUrl[0];
+        }
+      }
     }
   }
 

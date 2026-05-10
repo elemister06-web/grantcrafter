@@ -39,7 +39,8 @@ async function checkUrl(url: string): Promise<"valid" | "dead" | "blocked"> {
     }
     return res.status < 400 ? "valid" : "dead";
   } catch {
-    // Network error / timeout — assume blocked/real (don't remove on network issues)
+    // Timeout, DNS block, firewall — assume real.
+    // We only remove links on confirmed 404/410. Unknown = keep.
     return "blocked";
   }
 }

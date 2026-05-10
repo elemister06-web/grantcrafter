@@ -23,12 +23,31 @@ export async function POST(req: NextRequest) {
           method: "HEAD",
           redirect: "follow",
           signal: AbortSignal.timeout(5000),
-          headers: { "User-Agent": "GrantCrafter-LinkChecker/1.0" },
+          headers: { "User-Agent": "Mozilla/5.0 (compatible; GrantCrafter/1.0)" },
         });
-        // 200-399 = valid; 404, 410 = definitely dead; 5xx = treat as uncertain (keep link)
-        results[url] = res.status < 400 || (res.status >= 500 && res.status < 600);
+
+        if (res.status === 404 || res.status === 410) {
+          // Confirm with a GET before marking dead — some servers reject HEAD
+          try {
+            const res2 = await fetch(url, {
+              method: "GET",
+              redirect: "follow",
+              signal: AbortSignal.timeout(5000),
+              headers: { "User-Agent": "Mozilla/5.0 (compatible; GrantCrafter/1.0)" },
+            });
+            results[url] = res2.status !== 404 && res2.status !== 410;
+          } catch {
+            // GET also failed — assume valid (timeout/block, not dead)
+            results[url] = true;
+          }
+        } else {
+          // 2xx/3xx = valid; 4xx (not 404/410) = blocked but real; 5xx = uncertain but real
+          results[url] = true;
+        }
       } catch {
-        results[url] = false;
+        // Timeout, DNS error, firewall block — assume the link is valid
+        // Only confirmed 404/410 responses should hide a link
+        results[url] = true;
       }
     })
   );
