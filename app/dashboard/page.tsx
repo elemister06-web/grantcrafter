@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { parseGrantsFromReport, ParsedGrant } from "@/lib/parse-grants";
@@ -17,6 +17,11 @@ interface Application {
   grant_slug: string;
 }
 
+interface Dismissal {
+  report_id: string;
+  grant_slug: string;
+}
+
 interface UserData {
   id: string;
   email: string;
@@ -25,6 +30,7 @@ interface UserData {
   created_at: string;
   grant_reports: GrantReport[];
   applications: Application[];
+  dismissals: Dismissal[];
 }
 
 const formatReportPeriod = (month: string): string => {
@@ -45,42 +51,28 @@ const formatReportPeriod = (month: string): string => {
   return date.toLocaleString("en-US", { month: "long", year: "numeric" });
 };
 
-const formatMemberSince = (isoDate: string): string => {
-  try {
-    return new Date(isoDate).toLocaleDateString("en-US", {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    });
-  } catch {
-    return isoDate;
-  }
-};
-
 const getStatusBadge = (status: string) => {
   switch (status) {
     case "active":
-      return { label: "Active", classes: "bg-green-100 text-green-800" };
+      return { label: "Active Member", classes: "bg-emerald-50 text-emerald-700 border border-emerald-200" };
     case "trialing":
-      return { label: "Free Trial", classes: "bg-green-100 text-green-800" };
+      return { label: "Free Trial", classes: "bg-emerald-50 text-emerald-700 border border-emerald-200" };
     case "canceling":
-      return { label: "Canceling", classes: "bg-amber-100 text-amber-800" };
+      return { label: "Canceling", classes: "bg-amber-50 text-amber-700 border border-amber-200" };
     case "past_due":
-      return { label: "Past Due", classes: "bg-red-100 text-red-800" };
+      return { label: "Past Due", classes: "bg-red-50 text-red-700 border border-red-200" };
     case "canceled":
-      return { label: "Canceled", classes: "bg-gray-100 text-gray-600" };
+      return { label: "Canceled", classes: "bg-gray-100 text-gray-500 border border-gray-200" };
     default:
-      return { label: status, classes: "bg-gray-100 text-gray-600" };
+      return { label: status, classes: "bg-gray-100 text-gray-500 border border-gray-200" };
   }
 };
 
-const getMatchBadge = (score: string) => {
+const getMatchColor = (score: string) => {
   const lower = score.toLowerCase();
-  if (lower.includes("high"))
-    return "bg-green-100 text-green-800";
-  if (lower.includes("medium") || lower.includes("mid"))
-    return "bg-amber-100 text-amber-800";
-  return "bg-gray-100 text-gray-600";
+  if (lower.includes("high")) return { bg: "bg-emerald-50", text: "text-emerald-700", dot: "bg-emerald-500" };
+  if (lower.includes("medium") || lower.includes("mid")) return { bg: "bg-amber-50", text: "text-amber-700", dot: "bg-amber-500" };
+  return { bg: "bg-gray-50", text: "text-gray-500", dot: "bg-gray-400" };
 };
 
 export default function DashboardPage() {
@@ -89,10 +81,13 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [cancelState, setCancelState] = useState<"idle" | "confirming" | "loading" | "done">("idle");
   const [cancelBanner, setCancelBanner] = useState("");
-  const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [signingOut, setSigningOut] = useState(false);
   const [selectedReport, setSelectedReport] = useState<GrantReport | null>(null);
   const [appliedSet, setAppliedSet] = useState<Set<string>>(new Set());
+  const [dismissedSet, setDismissedSet] = useState<Set<string>>(new Set());
+  const [linkValidity, setLinkValidity] = useState<Record<string, boolean>>({});
+  const [validatingLinks, setValidatingLinks] = useState(false);
+  const [activeTab, setActiveTab] = useState<"all" | "applied" | "dismissed">("all");
 
   useEffect(() => {
     fetch("/api/dashboard", { credentials: "include" })
@@ -111,16 +106,54 @@ export default function DashboardPage() {
       .catch(() => router.push("/login"));
   }, [router]);
 
-  // Sync applied set when selected report changes
+  // Sync applied + dismissed sets when selected report changes
   useEffect(() => {
     if (!userData || !selectedReport) return;
-    const slugs = new Set(
+    setAppliedSet(new Set(
       (userData.applications || [])
         .filter((a) => a.report_id === selectedReport.id)
         .map((a) => a.grant_slug)
-    );
-    setAppliedSet(slugs);
+    ));
+    setDismissedSet(new Set(
+      (userData.dismissals || [])
+        .filter((d) => d.report_id === selectedReport.id)
+        .map((d) => d.grant_slug)
+    ));
   }, [selectedReport, userData]);
+
+  // Validate links after grants load
+  const validateLinks = useCallback(async (grants: ParsedGrant[], reportId: string) => {
+    const urls = grants.map((g) => g.applyUrl).filter(Boolean) as string[];
+    if (urls.length === 0) return;
+    setValidatingLinks(true);
+    try {
+      const res = await fetch("/api/validate-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ urls }),
+      });
+      if (res.ok) {
+        const { results } = await res.json();
+        setLinkValidity((prev) => ({ ...prev, [reportId]: undefined, ...results }));
+      }
+    } catch {
+      // Silent fail — show links anyway
+    }
+    setValidatingLinks(false);
+  }, []);
+
+  // Trigger link validation when report changes
+  useEffect(() => {
+    if (!selectedReport) return;
+    const grants = parseGrantsFromReport(selectedReport.report_content || "");
+    // Only validate if we haven't already
+    const urls = grants.map((g) => g.applyUrl).filter(Boolean) as string[];
+    const unchecked = urls.filter((u) => !(u in linkValidity));
+    if (unchecked.length > 0) {
+      validateLinks(grants, selectedReport.id);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedReport?.id]);
 
   const handleSignOut = async () => {
     setSigningOut(true);
@@ -134,9 +167,7 @@ export default function DashboardPage() {
       const res = await fetch("/api/cancel", { method: "POST", credentials: "include" });
       if (res.ok) {
         setCancelState("done");
-        setCancelBanner(
-          "Your subscription has been canceled. You'll keep full access until your billing period ends."
-        );
+        setCancelBanner("Your subscription has been canceled. You'll keep full access until your billing period ends.");
         const refreshRes = await fetch("/api/dashboard", { credentials: "include" });
         if (refreshRes.ok) {
           const data = await refreshRes.json();
@@ -150,32 +181,8 @@ export default function DashboardPage() {
     }
   };
 
-  const handleDownload = async (report: GrantReport) => {
-    setDownloadingId(report.id);
-    try {
-      const res = await fetch(`/api/download-report?reportId=${report.id}`, {
-        credentials: "include",
-      });
-      if (res.ok) {
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `grant-report-${report.month}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      }
-    } catch (err) {
-      console.error("Download failed:", err);
-    }
-    setDownloadingId(null);
-  };
-
   const toggleApplied = async (grant: ParsedGrant, reportId: string) => {
     const isApplied = appliedSet.has(grant.slug);
-    // Optimistic update
     setAppliedSet((prev) => {
       const next = new Set(prev);
       if (isApplied) next.delete(grant.slug);
@@ -186,19 +193,42 @@ export default function DashboardPage() {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        reportId,
-        grantSlug: grant.slug,
-        grantName: grant.name,
-        applied: !isApplied,
-      }),
+      body: JSON.stringify({ reportId, grantSlug: grant.slug, grantName: grant.name, applied: !isApplied }),
+    });
+  };
+
+  const dismissGrant = async (grant: ParsedGrant, reportId: string) => {
+    // Optimistic update
+    setDismissedSet((prev) => new Set([...prev, grant.slug]));
+    // If marked as applied, remove that too
+    if (appliedSet.has(grant.slug)) {
+      setAppliedSet((prev) => { const next = new Set(prev); next.delete(grant.slug); return next; });
+    }
+    await fetch("/api/dismiss-grant", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reportId, grantSlug: grant.slug, dismiss: true }),
+    });
+  };
+
+  const restoreGrant = async (grant: ParsedGrant, reportId: string) => {
+    setDismissedSet((prev) => { const next = new Set(prev); next.delete(grant.slug); return next; });
+    await fetch("/api/dismiss-grant", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reportId, grantSlug: grant.slug, dismiss: false }),
     });
   };
 
   if (loading) {
     return (
-      <main className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#f8fafc" }}>
-        <div className="text-gray-400 text-sm">Loading your dashboard...</div>
+      <main className="min-h-screen flex items-center justify-center" style={{ background: "linear-gradient(135deg, #f0fdf4 0%, #f8fafc 100%)" }}>
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-gray-400">Loading your dashboard…</p>
+        </div>
       </main>
     );
   }
@@ -207,295 +237,354 @@ export default function DashboardPage() {
 
   const statusBadge = getStatusBadge(userData.subscription_status);
   const isSubscriptionActive = ["active", "trialing"].includes(userData.subscription_status);
-
-  // Parse grants for selected report
   const grants: ParsedGrant[] = selectedReport
     ? parseGrantsFromReport(selectedReport.report_content || "")
     : [];
 
-  const appliedCount = grants.filter((g) => appliedSet.has(g.slug)).length;
+  const activeGrants = grants.filter((g) => !dismissedSet.has(g.slug));
+  const appliedGrants = activeGrants.filter((g) => appliedSet.has(g.slug));
+  const dismissedGrants = grants.filter((g) => dismissedSet.has(g.slug));
+
+  const displayGrants =
+    activeTab === "applied" ? appliedGrants :
+    activeTab === "dismissed" ? dismissedGrants :
+    activeGrants;
 
   return (
-    <main className="min-h-screen" style={{ backgroundColor: "#f8fafc" }}>
-      {/* ── STICKY NAV ── */}
-      <nav className="bg-white border-b border-gray-100 sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-0">
-            <span className="text-xl font-black text-green-700">Grant</span>
+    <main className="min-h-screen" style={{ background: "#f8fafc" }}>
+      {/* ── NAVBAR ── */}
+      <nav style={{ background: "white", borderBottom: "1px solid #e5e7eb" }} className="sticky top-0 z-20">
+        <div className="max-w-5xl mx-auto px-5 h-16 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-0 select-none">
+            <span className="text-xl font-black" style={{ color: "#15803d" }}>Grant</span>
             <span className="text-xl font-black text-gray-900">Crafter</span>
           </Link>
-          <button
-            onClick={handleSignOut}
-            disabled={signingOut}
-            className="text-sm text-gray-500 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 px-4 py-1.5 rounded-full font-medium transition-colors disabled:opacity-50"
-          >
-            {signingOut ? "Signing out..." : "Sign out"}
-          </button>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/profile"
+              className="text-sm text-gray-600 hover:text-gray-900 font-medium px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              My Profile
+            </Link>
+            <button
+              onClick={handleSignOut}
+              disabled={signingOut}
+              className="text-sm text-gray-500 hover:text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors font-medium disabled:opacity-50"
+            >
+              {signingOut ? "Signing out…" : "Sign Out"}
+            </button>
+          </div>
         </div>
       </nav>
 
-      <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
-        {/* ── CANCEL SUCCESS BANNER ── */}
+      <div className="max-w-5xl mx-auto px-5 py-8 space-y-6">
+
+        {/* ── CANCEL BANNER ── */}
         {cancelBanner && (
-          <div className="bg-green-50 border border-green-200 rounded-2xl px-5 py-4 text-green-800 text-sm font-medium flex items-start gap-3">
-            <span className="text-lg">✅</span>
+          <div className="bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-4 text-emerald-800 text-sm font-medium flex items-center gap-3">
+            <span>✅</span>
             <span>{cancelBanner}</span>
           </div>
         )}
 
-        {/* ── HERO / WELCOME CARD ── */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-          <div className="flex items-start justify-between flex-wrap gap-4">
+        {/* ── WELCOME CARD ── */}
+        <div className="rounded-2xl overflow-hidden" style={{ background: "linear-gradient(135deg, #15803d 0%, #166534 100%)" }}>
+          <div className="px-8 py-7 flex items-start justify-between flex-wrap gap-4">
             <div>
-              <p className="text-sm text-gray-500 mb-1">👋 Welcome back,</p>
-              <h1 className="text-2xl font-black text-gray-900">
+              <p className="text-emerald-200 text-sm font-medium mb-1">Welcome back</p>
+              <h1 className="text-2xl font-bold text-white leading-tight">
                 {userData.business_name || userData.email}
               </h1>
-              <p className="text-sm text-gray-400 mt-1">
-                {userData.email}
-                {userData.created_at && (
-                  <> · Member since {formatMemberSince(userData.created_at)}</>
-                )}
-              </p>
+              <p className="text-emerald-300 text-sm mt-1">{userData.email}</p>
             </div>
-            <span className={`text-xs font-bold px-3 py-1.5 rounded-full ${statusBadge.classes}`}>
+            <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-white/20 text-white border border-white/30 backdrop-blur-sm">
               {statusBadge.label}
             </span>
           </div>
+          {/* Stats bar */}
+          {userData.grant_reports.length > 0 && (
+            <div className="border-t border-white/10 px-8 py-4 flex items-center gap-8">
+              <div>
+                <p className="text-3xl font-black text-white">{activeGrants.length}</p>
+                <p className="text-emerald-300 text-xs font-medium mt-0.5">Active Grants</p>
+              </div>
+              <div className="w-px h-8 bg-white/20" />
+              <div>
+                <p className="text-3xl font-black text-white">{appliedGrants.length}</p>
+                <p className="text-emerald-300 text-xs font-medium mt-0.5">Applied</p>
+              </div>
+              <div className="w-px h-8 bg-white/20" />
+              <div>
+                <p className="text-3xl font-black text-white">{userData.grant_reports.length}</p>
+                <p className="text-emerald-300 text-xs font-medium mt-0.5">Reports</p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* ── REPORTS SECTION ── */}
         {userData.grant_reports.length > 0 ? (
           <div>
-            {/* ── REPORT SELECTOR TABS ── */}
-            <div className="flex gap-2 overflow-x-auto pb-1 mb-6 scrollbar-hide">
-              {userData.grant_reports.map((report) => {
-                const isSelected = selectedReport?.id === report.id;
-                return (
-                  <button
-                    key={report.id}
-                    onClick={() => setSelectedReport(report)}
-                    className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-colors whitespace-nowrap ${
-                      isSelected
-                        ? "bg-green-100 text-green-700"
-                        : "bg-white border border-gray-200 text-gray-500 hover:border-green-300 hover:text-green-700"
-                    }`}
-                  >
-                    {isSelected && <span className="mr-1">●</span>}
-                    {formatReportPeriod(report.month)}
-                  </button>
-                );
-              })}
-            </div>
+            {/* Report selector */}
+            {userData.grant_reports.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto pb-1 mb-5">
+                {userData.grant_reports.map((report) => {
+                  const isSelected = selectedReport?.id === report.id;
+                  return (
+                    <button
+                      key={report.id}
+                      onClick={() => { setSelectedReport(report); setActiveTab("all"); }}
+                      className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-all whitespace-nowrap ${
+                        isSelected
+                          ? "text-white shadow-sm"
+                          : "bg-white border border-gray-200 text-gray-500 hover:border-emerald-300 hover:text-emerald-700"
+                      }`}
+                      style={isSelected ? { background: "#15803d" } : {}}
+                    >
+                      {formatReportPeriod(report.month)}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
 
-            {/* ── GRANT TRACKER ── */}
             {selectedReport && (
               <div>
-                {/* Header row */}
+                {/* Section header */}
                 <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-                  <h2 className="text-lg font-bold text-gray-900">
-                    {grants.length} Grant{grants.length !== 1 ? "s" : ""} Found
-                  </h2>
-                  <div className="flex items-center gap-3">
-                    {appliedCount > 0 && (
-                      <span className="bg-green-100 text-green-800 text-xs font-bold px-3 py-1.5 rounded-full">
-                        {appliedCount} Applied
-                      </span>
-                    )}
-                    <button
-                      onClick={() => handleDownload(selectedReport)}
-                      disabled={downloadingId === selectedReport.id}
-                      className="text-sm text-gray-600 border border-gray-200 hover:border-gray-400 px-3 py-1.5 rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center gap-1"
-                    >
-                      {downloadingId === selectedReport.id ? (
-                        <><span className="animate-spin inline-block">⟳</span> Generating...</>
-                      ) : (
-                        <>↓ Download PDF</>
-                      )}
-                    </button>
+                  <div>
+                    <h2 className="text-lg font-bold text-gray-900">
+                      {formatReportPeriod(selectedReport.month)}
+                    </h2>
+                    <p className="text-sm text-gray-400 mt-0.5">
+                      {grants.length} grant{grants.length !== 1 ? "s" : ""} found
+                      {validatingLinks && <span className="ml-2 text-gray-300">· Checking links…</span>}
+                    </p>
                   </div>
                 </div>
 
-                {grants.length > 0 ? (
+                {/* Filter tabs */}
+                <div className="flex gap-1 mb-5 bg-white border border-gray-200 rounded-xl p-1 w-fit">
+                  {[
+                    { key: "all", label: `All (${activeGrants.length})` },
+                    { key: "applied", label: `Applied (${appliedGrants.length})` },
+                    { key: "dismissed", label: `Dismissed (${dismissedGrants.length})` },
+                  ].map(({ key, label }) => (
+                    <button
+                      key={key}
+                      onClick={() => setActiveTab(key as typeof activeTab)}
+                      className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+                        activeTab === key
+                          ? "bg-gray-900 text-white shadow-sm"
+                          : "text-gray-500 hover:text-gray-800"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Grant cards */}
+                {displayGrants.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {grants.map((grant) => {
+                    {displayGrants.map((grant) => {
                       const isApplied = appliedSet.has(grant.slug);
+                      const isDismissed = dismissedSet.has(grant.slug);
+                      const matchColor = grant.matchScore ? getMatchColor(grant.matchScore) : null;
+                      const urlValid = grant.applyUrl ? linkValidity[grant.applyUrl] ?? true : null;
+
                       return (
                         <div
                           key={grant.slug}
-                          className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col"
+                          className={`bg-white rounded-2xl border shadow-sm flex flex-col transition-all ${
+                            isDismissed ? "opacity-60 border-gray-100" : isApplied ? "border-emerald-200" : "border-gray-100 hover:border-gray-200 hover:shadow-md"
+                          }`}
                         >
-                          {/* Top badges row */}
-                          <div className="flex items-center gap-2 mb-3 flex-wrap">
-                            {grant.matchScore && (
-                              <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${getMatchBadge(grant.matchScore)}`}>
-                                Match: {grant.matchScore}
-                              </span>
+                          {/* Card header */}
+                          <div className="px-5 pt-5 pb-0">
+                            {/* Badges row */}
+                            <div className="flex items-center gap-2 mb-3 flex-wrap">
+                              {isApplied && (
+                                <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-full border border-emerald-200">
+                                  ✓ Applied
+                                </span>
+                              )}
+                              {matchColor && grant.matchScore && (
+                                <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${matchColor.bg} ${matchColor.text}`}>
+                                  <span className={`w-1.5 h-1.5 rounded-full ${matchColor.dot}`} />
+                                  {grant.matchScore} Match
+                                </span>
+                              )}
+                              {grant.amount && (
+                                <span className="bg-gray-50 text-gray-600 text-xs font-semibold px-2.5 py-1 rounded-full border border-gray-100">
+                                  {grant.amount}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Grant name */}
+                            <h3 className="text-base font-bold text-gray-900 leading-snug mb-1">
+                              {grant.name}
+                            </h3>
+
+                            {/* Org + Type */}
+                            {(grant.organization || grant.type) && (
+                              <p className="text-sm text-gray-400 mb-2">
+                                {[grant.organization, grant.type].filter(Boolean).join(" · ")}
+                              </p>
                             )}
-                            {grant.amount && (
-                              <span className="bg-gray-100 text-gray-700 text-xs font-semibold px-2 py-1 rounded-full">
-                                {grant.amount}
-                              </span>
+
+                            {/* Deadline */}
+                            {grant.deadline && (
+                              <p className="text-xs font-semibold text-amber-600 mb-3 flex items-center gap-1">
+                                <span>📅</span> {grant.deadline}
+                              </p>
+                            )}
+
+                            {/* What it funds */}
+                            {grant.whatItFunds && (
+                              <p className="text-sm text-gray-500 line-clamp-3 mb-4 leading-relaxed">
+                                {grant.whatItFunds}
+                              </p>
                             )}
                           </div>
 
-                          {/* Grant name */}
-                          <h3 className="text-lg font-bold text-gray-900 leading-snug mb-1">
-                            {grant.name}
-                          </h3>
-
-                          {/* Organization · Type */}
-                          {(grant.organization || grant.type) && (
-                            <p className="text-sm text-gray-500 mb-2">
-                              {[grant.organization, grant.type].filter(Boolean).join(" · ")}
-                            </p>
-                          )}
-
-                          {/* Deadline */}
-                          {grant.deadline && (
-                            <p className="text-sm text-amber-700 font-medium mb-2">
-                              📅 Deadline: {grant.deadline}
-                            </p>
-                          )}
-
-                          {/* What it funds */}
-                          {grant.whatItFunds && (
-                            <p className="text-sm text-gray-600 line-clamp-3 mb-4 flex-1">
-                              {grant.whatItFunds}
-                            </p>
-                          )}
-
-                          {/* Action row */}
-                          <div className="border-t border-gray-100 pt-4 flex items-center justify-between gap-3 mt-auto">
-                            {grant.applyUrl ? (
+                          {/* Card footer */}
+                          <div className="mt-auto border-t border-gray-50 px-5 py-4 flex items-center justify-between gap-3">
+                            {/* Apply link */}
+                            {grant.applyUrl && urlValid !== false ? (
                               <a
                                 href={grant.applyUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-green-700 font-semibold text-sm hover:text-green-900 flex items-center gap-1"
+                                className="text-sm font-semibold flex items-center gap-1 transition-colors"
+                                style={{ color: "#15803d" }}
                               >
                                 Apply Now →
                               </a>
+                            ) : grant.applyUrl && urlValid === false ? (
+                              <span className="text-xs text-gray-400 italic">Link unavailable</span>
                             ) : (
-                              <span className="text-gray-400 text-sm">See report for details</span>
+                              <span className="text-xs text-gray-400">See your report for details</span>
                             )}
 
-                            <button
-                              onClick={() => toggleApplied(grant, selectedReport.id)}
-                              className={`text-sm px-4 py-2 rounded-xl transition-colors font-medium ${
-                                isApplied
-                                  ? "bg-green-700 text-white font-semibold"
-                                  : "border border-gray-200 text-gray-500 hover:border-green-500 hover:text-green-700"
-                              }`}
-                            >
-                              {isApplied ? "✓ Applied" : "Mark as Applied"}
-                            </button>
+                            {/* Action buttons */}
+                            <div className="flex items-center gap-2">
+                              {isDismissed ? (
+                                <button
+                                  onClick={() => restoreGrant(grant, selectedReport.id)}
+                                  className="text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-gray-500 hover:border-emerald-400 hover:text-emerald-700 transition-colors font-medium"
+                                >
+                                  Restore
+                                </button>
+                              ) : (
+                                <>
+                                  <button
+                                    onClick={() => dismissGrant(grant, selectedReport.id)}
+                                    title="Not interested"
+                                    className="text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 text-gray-400 hover:border-red-300 hover:text-red-500 transition-colors font-medium"
+                                  >
+                                    ✕
+                                  </button>
+                                  <button
+                                    onClick={() => toggleApplied(grant, selectedReport.id)}
+                                    className={`text-sm px-4 py-1.5 rounded-lg transition-all font-semibold ${
+                                      isApplied
+                                        ? "text-white"
+                                        : "border border-gray-200 text-gray-600 hover:border-emerald-500 hover:text-emerald-700"
+                                    }`}
+                                    style={isApplied ? { background: "#15803d" } : {}}
+                                  >
+                                    {isApplied ? "✓ Applied" : "Mark Applied"}
+                                  </button>
+                                </>
+                              )}
+                            </div>
                           </div>
                         </div>
                       );
                     })}
                   </div>
                 ) : (
-                  /* Empty state: fallback to download card */
-                  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col items-center text-center max-w-sm mx-auto">
-                    <div className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center text-2xl mb-4">
-                      📄
+                  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center">
+                    <div className="text-4xl mb-4">
+                      {activeTab === "applied" ? "🏆" : activeTab === "dismissed" ? "🗑️" : "📋"}
                     </div>
-                    <h3 className="text-lg font-bold text-gray-900 mb-2">
-                      {formatReportPeriod(selectedReport.month)}
-                    </h3>
-                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-green-700 bg-green-50 px-3 py-1 rounded-full mb-4">
-                      <span>✓</span> Delivered
-                    </span>
-                    <button
-                      onClick={() => handleDownload(selectedReport)}
-                      disabled={downloadingId === selectedReport.id}
-                      className="w-full bg-green-700 hover:bg-green-800 disabled:bg-green-400 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors"
-                    >
-                      {downloadingId === selectedReport.id ? (
-                        <><span className="animate-spin">⟳</span> Generating PDF...</>
-                      ) : (
-                        <>↓ Download PDF</>
-                      )}
-                    </button>
+                    <p className="text-gray-500 text-sm">
+                      {activeTab === "applied"
+                        ? "No grants marked as applied yet."
+                        : activeTab === "dismissed"
+                        ? "No dismissed grants."
+                        : "No grants found for this period."}
+                    </p>
                   </div>
                 )}
               </div>
             )}
           </div>
         ) : (
-          /* No reports at all */
+          /* No reports yet */
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center">
-            <div className="w-14 h-14 bg-green-50 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
-              📋
-            </div>
-            <h3 className="text-lg font-bold text-gray-900 mb-2">
-              Your first report is on its way
-            </h3>
-            <p className="text-sm text-gray-500 max-w-xs mx-auto">
-              We&apos;re generating your personalized grant report right now. You&apos;ll receive
-              it by email — and it&apos;ll appear here — shortly.
+            <div className="w-14 h-14 bg-emerald-50 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">📋</div>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Your first report is on its way</h3>
+            <p className="text-sm text-gray-400 max-w-xs mx-auto leading-relaxed">
+              We&apos;re generating your personalized grant report now. It&apos;ll appear here — and in your inbox — shortly.
             </p>
           </div>
         )}
 
-        {/* ── ACCOUNT & BILLING SECTION ── */}
+        {/* ── ACCOUNT & BILLING ── */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">Account &amp; Billing</h2>
-          <div className="space-y-2 text-sm mb-5">
-            <div className="flex gap-3">
-              <span className="text-gray-500 w-20 flex-shrink-0">Email</span>
-              <span className="text-gray-900 font-medium">{userData.email}</span>
-            </div>
-            <div className="flex gap-3">
-              <span className="text-gray-500 w-20 flex-shrink-0">Status</span>
-              <span className={`font-semibold ${isSubscriptionActive ? "text-green-700" : "text-gray-600"}`}>
+          <h2 className="text-base font-bold text-gray-900 mb-4">Subscription</h2>
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="space-y-1">
+              <p className="text-sm text-gray-900 font-medium">{userData.email}</p>
+              <span className={`inline-block text-xs font-semibold px-2.5 py-1 rounded-full ${statusBadge.classes}`}>
                 {statusBadge.label}
               </span>
             </div>
-          </div>
-
-          {/* Cancel subscription */}
-          {isSubscriptionActive && cancelState !== "done" && (
-            <>
-              {cancelState === "idle" && (
+            <div className="flex items-center gap-3">
+              <Link
+                href="/profile"
+                className="text-sm font-semibold px-4 py-2 rounded-xl border border-gray-200 text-gray-700 hover:border-gray-400 transition-colors"
+              >
+                Manage Profile
+              </Link>
+              {isSubscriptionActive && cancelState === "idle" && (
                 <button
                   onClick={() => setCancelState("confirming")}
-                  className="text-sm text-red-500 hover:text-red-700 underline transition-colors"
+                  className="text-sm text-red-400 hover:text-red-600 transition-colors font-medium"
                 >
-                  Cancel subscription
+                  Cancel
                 </button>
               )}
+            </div>
+          </div>
 
-              {(cancelState === "confirming" || cancelState === "loading") && (
-                <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 max-w-sm">
-                  <p className="text-sm font-semibold text-gray-900 mb-1">
-                    Are you sure you want to cancel?
-                  </p>
-                  <p className="text-sm text-gray-500 mb-4">
-                    You&apos;ll keep access until the end of your billing period.
-                  </p>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleCancelConfirm}
-                      disabled={cancelState === "loading"}
-                      className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-red-300 disabled:cursor-not-allowed text-white text-sm font-bold py-2.5 rounded-xl transition-colors"
-                    >
-                      {cancelState === "loading" ? "Canceling..." : "Yes, cancel my subscription"}
-                    </button>
-                    <button
-                      onClick={() => setCancelState("idle")}
-                      disabled={cancelState === "loading"}
-                      className="flex-1 bg-white hover:bg-gray-100 text-gray-700 text-sm font-medium py-2.5 rounded-xl border border-gray-200 transition-colors"
-                    >
-                      Never mind
-                    </button>
-                  </div>
-                </div>
-              )}
-            </>
+          {(cancelState === "confirming" || cancelState === "loading") && (
+            <div className="mt-4 bg-red-50 border border-red-200 rounded-xl p-5 max-w-sm">
+              <p className="text-sm font-semibold text-gray-900 mb-1">Cancel your subscription?</p>
+              <p className="text-sm text-gray-500 mb-4">You&apos;ll keep full access until the end of your billing period.</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleCancelConfirm}
+                  disabled={cancelState === "loading"}
+                  className="flex-1 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-sm font-bold py-2.5 rounded-xl transition-colors"
+                >
+                  {cancelState === "loading" ? "Canceling…" : "Yes, cancel"}
+                </button>
+                <button
+                  onClick={() => setCancelState("idle")}
+                  disabled={cancelState === "loading"}
+                  className="flex-1 bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium py-2.5 rounded-xl border border-gray-200 transition-colors"
+                >
+                  Never mind
+                </button>
+              </div>
+            </div>
           )}
         </div>
+
       </div>
     </main>
   );

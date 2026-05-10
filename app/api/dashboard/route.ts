@@ -41,11 +41,21 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  // Also fetch grant applications for this user
-  const { data: applications } = await supabaseAdmin
-    .from("grant_applications")
-    .select("report_id, grant_slug")
-    .eq("user_id", userData.id);
+  // Also fetch grant applications and dismissals for this user
+  const [{ data: applications }, { data: dismissals }] = await Promise.all([
+    supabaseAdmin
+      .from("grant_applications")
+      .select("report_id, grant_slug")
+      .eq("user_id", userData.id),
+    supabaseAdmin
+      .from("dismissed_grants")
+      .select("report_id, grant_slug")
+      .eq("user_id", userData.id),
+  ]);
 
-  return NextResponse.json({ ...userData, applications: applications || [] });
+  return NextResponse.json({
+    ...userData,
+    applications: applications || [],
+    dismissals: dismissals || [],
+  });
 }

@@ -113,13 +113,12 @@ export function buildSimpleEmail(
   <div style="background:#15803d;padding:28px 24px;text-align:center;">
     <div style="font-size:26px;font-weight:900;color:white;">Grant<span style="color:#bbf7d0;">Crafter</span></div>
   </div>
-  <div style="background:white;padding:36px 32px;text-align:center;">
-    <div style="font-size:40px;margin-bottom:16px;">📎</div>
-    <h1 style="color:#111827;font-size:22px;margin:0 0 12px;">Your Grant Report is Ready</h1>
-    <p style="color:#6b7280;font-size:16px;margin:0 0 8px;">Prepared for <strong style="color:#111827;">${businessName}</strong></p>
-    <p style="color:#9ca3af;font-size:14px;margin:0 0 28px;">${periodLabel}</p>
-    <p style="color:#374151;font-size:16px;margin:0 0 28px;">Your personalized grant report is attached as a PDF. Open it to see all the opportunities we found for your business this week.</p>
-    <a href="${appUrl}/dashboard" style="background:#15803d;color:white;padding:14px 32px;border-radius:8px;font-weight:700;text-decoration:none;display:inline-block;font-size:16px;">View Dashboard →</a>
+  <div style="background:white;padding:40px 32px;text-align:center;">
+    <div style="font-size:44px;margin-bottom:20px;">✅</div>
+    <h1 style="color:#111827;font-size:22px;font-weight:800;margin:0 0 10px;">Your dashboard has been updated</h1>
+    <p style="color:#6b7280;font-size:15px;margin:0 0 8px;">New grant opportunities for <strong style="color:#111827;">${businessName}</strong> are ready to review.</p>
+    <p style="color:#9ca3af;font-size:13px;margin:0 0 32px;">${periodLabel}</p>
+    <a href="${appUrl}/dashboard" style="background:#15803d;color:white;padding:14px 32px;border-radius:10px;font-weight:700;text-decoration:none;display:inline-block;font-size:15px;">View My Dashboard →</a>
   </div>
   <div style="background:#1f2937;padding:20px 24px;text-align:center;">
     <p style="color:#9ca3af;font-size:12px;margin:0;">GrantCrafter · For informational purposes only · Not a guarantee of grant eligibility<br>
