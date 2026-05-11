@@ -6,6 +6,7 @@ export interface ParsedGrant {
   amount: string;
   deadline: string;
   matchScore: string;
+  eligibilityAssessment: string;
   whatItFunds: string;
   howToApply: string;
   applyUrl: string | null;
@@ -32,6 +33,7 @@ export function parseGrantsFromReport(content: string): ParsedGrant[] {
         amount: g.amount || "",
         deadline: g.deadline || "",
         matchScore: g.matchScore || "",
+        eligibilityAssessment: g.eligibilityAssessment || "",
         whatItFunds: g.whatItFunds || "",
         howToApply: g.howToApply || "",
         applyUrl: g.applyUrl || null,
@@ -82,7 +84,8 @@ export function parseGrantsFromReport(content: string): ParsedGrant[] {
       else if (field === "type") current.type = value;
       else if (field.includes("amount") || field.includes("award")) current.amount = value;
       else if (field.includes("deadline")) current.deadline = value;
-      else if (field.includes("match")) current.matchScore = value;
+      else if (field.includes("eligibility") || field.includes("assessment")) current.eligibilityAssessment = value;
+      else if (field.includes("match") && !field.includes("eligibility")) current.matchScore = value;
       else if (field.includes("funds") || field.includes("what it")) current.whatItFunds = value;
       else if (field.includes("apply")) {
         current.howToApply = value;

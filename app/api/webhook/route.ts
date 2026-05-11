@@ -23,10 +23,42 @@ function getBadgeColor(type: string): string {
   return "#374151";
 }
 
+function extractAiTips(rawReport: string): string[] {
+  const lines = rawReport.split("\n");
+  const tips: string[] = [];
+  let inTips = false;
+  for (const line of lines) {
+    if (/^## .*(tips|strengthen)/i.test(line)) { inTips = true; continue; }
+    if (inTips && /^## /.test(line)) break;
+    if (inTips && /^[-•*]\s+/.test(line)) {
+      const tip = line.replace(/^[-•*]\s+/, "").replace(/\*\*(.+?)\*\*/g, "$1").trim();
+      if (tip) tips.push(tip);
+    }
+  }
+  return tips;
+}
+
+function extractUpcomingDeadlines(rawReport: string): string[] {
+  const lines = rawReport.split("\n");
+  const items: string[] = [];
+  let inDeadlines = false;
+  for (const line of lines) {
+    if (/^## .*(upcoming|deadline)/i.test(line)) { inDeadlines = true; continue; }
+    if (inDeadlines && /^## /.test(line)) break;
+    if (inDeadlines && /^[-•*]\s+/.test(line)) {
+      const item = line.replace(/^[-•*]\s+/, "").replace(/\*\*(.+?)\*\*/g, "$1").trim();
+      if (item) items.push(item);
+    }
+  }
+  return items;
+}
+
 function buildEmail(grants: ReturnType<typeof parseGrantsFromReport>, businessName: string, email: string, rawReport: string): string {
   const top3 = grants.slice(0, 3);
   const allGrants = grants;
   const now = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  const aiTips = extractAiTips(rawReport);
+  const aiDeadlines = extractUpcomingDeadlines(rawReport);
 
   const topPicksHtml = top3.map(g => `
     <div style="background:#dcfce7;border-radius:10px;padding:20px;margin-bottom:16px;border:1px solid #bbf7d0;">
@@ -42,17 +74,26 @@ function buildEmail(grants: ReturnType<typeof parseGrantsFromReport>, businessNa
     const applyBtn = g.applyUrl
       ? `<a href="${g.applyUrl}" style="display:inline-block;background:#15803d;color:#ffffff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700;font-size:15px;margin-top:16px;">Apply Now →</a>`
       : "";
+    // Eligibility badge color
+    const eligBg = g.eligibilityAssessment.toLowerCase().includes("strong")
+      ? "#f0fdf4" : g.eligibilityAssessment.toLowerCase().includes("good")
+      ? "#eff6ff" : "#fffbeb";
+    const eligColor = g.eligibilityAssessment.toLowerCase().includes("strong")
+      ? "#15803d" : g.eligibilityAssessment.toLowerCase().includes("good")
+      ? "#1d4ed8" : "#d97706";
+    const eligBorder = g.eligibilityAssessment.toLowerCase().includes("strong")
+      ? "#bbf7d0" : g.eligibilityAssessment.toLowerCase().includes("good")
+      ? "#bfdbfe" : "#fde68a";
     return `
     <div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:24px;margin-bottom:20px;">
       <div style="font-size:20px;font-weight:800;color:#111827;margin-bottom:8px;">${g.name}</div>
-      <div style="margin-bottom:10px;">
+      <div style="margin-bottom:12px;display:flex;align-items:center;flex-wrap:wrap;gap:8px;">
         <span style="color:#6b7280;font-size:14px;">${g.organization}</span>
-        &nbsp;
         <span style="background:${badgeColor};color:#fff;font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px;">${g.type}</span>
+        ${g.eligibilityAssessment ? `<span style="background:${eligBg};color:${eligColor};font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;border:1px solid ${eligBorder};">${g.eligibilityAssessment}</span>` : ""}
       </div>
       <div style="font-size:26px;font-weight:800;color:#15803d;margin-bottom:6px;">${g.amount}</div>
-      ${g.deadline ? `<div style="color:#d97706;font-size:14px;font-weight:600;margin-bottom:8px;">📅 Deadline: ${g.deadline}</div>` : ""}
-      ${g.matchScore ? `<div style="display:inline-block;background:#f0fdf4;color:#15803d;font-size:13px;font-weight:700;padding:4px 12px;border-radius:20px;border:1px solid #bbf7d0;margin-bottom:12px;">Match: ${g.matchScore}</div>` : ""}
+      ${g.deadline ? `<div style="color:#d97706;font-size:14px;font-weight:600;margin-bottom:12px;">📅 Deadline: ${g.deadline}</div>` : ""}
       <div style="color:#374151;font-size:15px;line-height:1.6;margin-bottom:12px;"><strong>What It Funds:</strong> ${g.whatItFunds}</div>
       ${applyBtn}
       ${g.proTip ? `<div style="background:#fffbeb;border-left:4px solid #d97706;padding:12px 16px;border-radius:0 8px 8px 0;margin-top:16px;"><strong style="color:#92400e;">💡 Pro Tip:</strong> <span style="color:#78350f;font-size:14px;">${g.proTip}</span></div>` : ""}
@@ -60,11 +101,14 @@ function buildEmail(grants: ReturnType<typeof parseGrantsFromReport>, businessNa
   `;
   }).join("");
 
-  const upcomingDeadlines = allGrants
-    .filter(g => g.deadline && g.deadline !== "Varies" && g.deadline !== "Rolling")
-    .slice(0, 5)
-    .map(g => `<li style="margin-bottom:8px;color:#374151;"><strong>${g.name}</strong> — <span style="color:#d97706;">${g.deadline}</span></li>`)
-    .join("");
+  // Prefer AI-curated upcoming deadlines; fall back to filtered grant list
+  const upcomingDeadlines = aiDeadlines.length > 0
+    ? aiDeadlines.map(item => `<li style="margin-bottom:8px;color:#374151;">${item}</li>`).join("")
+    : allGrants
+        .filter(g => g.deadline && g.deadline !== "Varies" && g.deadline !== "Rolling")
+        .slice(0, 5)
+        .map(g => `<li style="margin-bottom:8px;color:#374151;"><strong>${g.name}</strong> — <span style="color:#d97706;">${g.deadline}</span></li>`)
+        .join("");
 
   return `<!DOCTYPE html>
 <html>
@@ -82,10 +126,10 @@ function buildEmail(grants: ReturnType<typeof parseGrantsFromReport>, businessNa
 
     <!-- Intro -->
     <div style="background:#ffffff;border-radius:12px;padding:24px;margin-bottom:20px;border:1px solid #e5e7eb;">
-      <div style="font-size:22px;font-weight:800;color:#111827;margin-bottom:6px;">Hi there! 👋</div>
+      <div style="font-size:22px;font-weight:800;color:#111827;margin-bottom:6px;">Hi, ${businessName}! 👋</div>
       <div style="color:#6b7280;font-size:15px;line-height:1.6;">
-        Here's your personalized grant report for <strong style="color:#111827;">${businessName}</strong>, generated on ${now}.
-        We found <strong>${allGrants.length} grant opportunities</strong> matched to your business profile.
+        Your personalized grant report is ready — generated on ${now}.
+        We found <strong style="color:#15803d;">${allGrants.length} grant opportunities</strong> matched to your business profile.
       </div>
     </div>
 
@@ -113,13 +157,16 @@ function buildEmail(grants: ReturnType<typeof parseGrantsFromReport>, businessNa
 
     <!-- Tips -->
     <div style="background:#ffffff;border-radius:12px;padding:24px;margin-bottom:20px;border:1px solid #e5e7eb;">
-      <div style="font-size:18px;font-weight:700;color:#111827;margin-bottom:16px;">🚀 Tips to Strengthen Your Applications</div>
+      <div style="font-size:18px;font-weight:700;color:#111827;margin-bottom:16px;">💡 Tips to Strengthen Your Applications</div>
       <ul style="margin:0;padding-left:20px;color:#374151;line-height:1.8;font-size:14px;">
-        <li>Have your EIN, business registration, and financial statements ready before applying</li>
-        <li>Start with grants that match the most criteria in your profile</li>
-        <li>Apply early — many grants close before the deadline when funds run out</li>
-        <li>Follow the instructions exactly; incomplete applications are disqualified</li>
-        <li>Consider applying for multiple grants simultaneously to increase your chances</li>
+        ${aiTips.length > 0
+          ? aiTips.map(tip => `<li style="margin-bottom:6px;">${tip}</li>`).join("")
+          : `<li>Have your EIN, business registration, and financial statements ready before applying</li>
+            <li>Start with grants that match the most criteria in your profile</li>
+            <li>Apply early — many grants close before the deadline when funds run out</li>
+            <li>Follow the instructions exactly; incomplete applications are disqualified</li>
+            <li>Consider applying for multiple grants simultaneously to increase your chances</li>`
+        }
       </ul>
     </div>
 

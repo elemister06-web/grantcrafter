@@ -171,8 +171,8 @@ export async function buildReportPDF(
     font: boldFont,
     color: WHITE,
   });
-  // "Weekly Grant Report" right
-  const headerSubText = "Weekly Grant Report";
+  // "Grant Report" right
+  const headerSubText = "Grant Report";
   const headerSubWidth = regularFont.widthOfTextAtSize(headerSubText, 12);
   page.drawText(sanitize(headerSubText), {
     x: PAGE_WIDTH - MARGIN_RIGHT - headerSubWidth,
