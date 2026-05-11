@@ -117,8 +117,8 @@ function buildEmail(grants: ReturnType<typeof parseGrantsFromReport>, businessNa
 
   <!-- Header -->
   <div style="background:#15803d;padding:32px 24px;text-align:center;">
-    <div style="font-size:28px;font-weight:900;color:#ffffff;letter-spacing:-0.5px;">🌿 GrantCrafter</div>
-    <div style="color:#bbf7d0;font-size:16px;margin-top:8px;font-weight:500;">Your Grant Report is Ready</div>
+    <img src="https://www.grantcrafter.com/logo.png" alt="GrantCrafter" width="80" height="80" style="display:block;margin:0 auto 12px;border-radius:12px;" />
+    <div style="color:#bbf7d0;font-size:16px;font-weight:500;">Your Grant Report is Ready</div>
   </div>
 
   <!-- Main content -->
