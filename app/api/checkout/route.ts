@@ -60,6 +60,7 @@ export async function POST(req: NextRequest) {
           quantity: 1,
         },
       ],
+      automatic_tax: { enabled: true },
       customer_email: email,
       success_url: `${appUrl}/thank-you?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl}/?canceled=true`,
