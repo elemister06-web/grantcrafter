@@ -60,21 +60,22 @@ function buildEmail(grants: ReturnType<typeof parseGrantsFromReport>, businessNa
   const aiTips = extractAiTips(rawReport);
   const aiDeadlines = extractUpcomingDeadlines(rawReport);
 
+  // Top picks — clean cards, no emojis
   const topPicksHtml = top3.map(g => `
-    <div class="gc-card" style="background:#ffffff;border-radius:10px;padding:20px;margin-bottom:12px;border:1px solid #e5e7eb;border-top:3px solid #15803d;">
-      <div style="font-size:16px;font-weight:700;color:#15803d;margin-bottom:4px;">⭐ ${g.name}</div>
-      <div style="color:#6b7280;font-size:13px;margin-bottom:6px;">${g.organization}</div>
-      <div class="gc-amount" style="font-size:22px;font-weight:800;color:#15803d;">${g.amount}</div>
-      ${g.deadline ? `<div style="color:#d97706;font-size:13px;margin-top:4px;">📅 Deadline: ${g.deadline}</div>` : ""}
+    <div style="background:#f0fdf4;border-radius:10px;padding:20px;margin-bottom:12px;border:1px solid #bbf7d0;border-left:4px solid #15803d;">
+      <div style="font-size:15px;font-weight:700;color:#14532d;margin-bottom:4px;">${g.name}</div>
+      <div style="color:#6b7280;font-size:13px;margin-bottom:8px;">${g.organization}</div>
+      <div style="font-size:22px;font-weight:800;color:#15803d;margin-bottom:${g.deadline ? '4px' : '0'};">${g.amount}</div>
+      ${g.deadline ? `<div style="color:#92400e;font-size:12px;font-weight:600;">Deadline: ${g.deadline}</div>` : ""}
     </div>
   `).join("");
 
+  // All grants — professional cards
   const allGrantsHtml = allGrants.map(g => {
     const badgeColor = getBadgeColor(g.type);
     const applyBtn = g.applyUrl
-      ? `<a href="${g.applyUrl}" class="apply-btn" style="display:inline-block;background:#15803d;color:#ffffff;padding:10px 22px;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px;margin-top:12px;">Apply Now →</a>`
+      ? `<a href="${g.applyUrl}" style="display:inline-block;background:#15803d;color:#ffffff;padding:10px 22px;border-radius:6px;text-decoration:none;font-weight:700;font-size:13px;margin-top:14px;">Apply Now</a>`
       : "";
-    // Eligibility badge color
     const eligBg = g.eligibilityAssessment.toLowerCase().includes("strong")
       ? "#f0fdf4" : g.eligibilityAssessment.toLowerCase().includes("good")
       ? "#eff6ff" : "#fffbeb";
@@ -85,115 +86,125 @@ function buildEmail(grants: ReturnType<typeof parseGrantsFromReport>, businessNa
       ? "#bbf7d0" : g.eligibilityAssessment.toLowerCase().includes("good")
       ? "#bfdbfe" : "#fde68a";
     return `
-    <div class="gc-card" style="background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:20px;margin-bottom:16px;">
-      <div style="font-size:18px;font-weight:800;color:#111827;margin-bottom:6px;">${g.name}</div>
-      <div class="gc-badge-row" style="margin-bottom:10px;display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
+    <div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:10px;padding:22px;margin-bottom:14px;">
+      <div style="font-size:16px;font-weight:800;color:#111827;margin-bottom:8px;">${g.name}</div>
+      <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
         <span style="color:#6b7280;font-size:13px;">${g.organization}</span>
-        <span style="background:${badgeColor};color:#fff;font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;">${g.type}</span>
-        ${g.eligibilityAssessment ? `<span style="background:${eligBg};color:${eligColor};font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;border:1px solid ${eligBorder};">${g.eligibilityAssessment}</span>` : ""}
+        <span style="background:${badgeColor};color:#fff;font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;">${g.type}</span>
+        ${g.eligibilityAssessment ? `<span style="background:${eligBg};color:${eligColor};font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;border:1px solid ${eligBorder};">${g.eligibilityAssessment}</span>` : ""}
       </div>
-      <div class="gc-amount" style="font-size:24px;font-weight:800;color:#15803d;margin-bottom:5px;">${g.amount}</div>
-      ${g.deadline ? `<div style="color:#d97706;font-size:13px;font-weight:600;margin-bottom:10px;">📅 Deadline: ${g.deadline}</div>` : ""}
-      <div style="color:#374151;font-size:14px;line-height:1.6;margin-bottom:10px;"><strong>What It Funds:</strong> ${g.whatItFunds}</div>
+      <div style="font-size:22px;font-weight:800;color:#15803d;margin-bottom:6px;">${g.amount}</div>
+      ${g.deadline ? `<div style="color:#92400e;font-size:13px;font-weight:600;margin-bottom:10px;">Deadline: ${g.deadline}</div>` : ""}
+      <div style="color:#374151;font-size:14px;line-height:1.65;margin-bottom:12px;">${g.whatItFunds}</div>
       ${applyBtn}
-      ${g.proTip ? `<div style="background:#fffbeb;border-left:4px solid #d97706;padding:10px 14px;border-radius:0 8px 8px 0;margin-top:12px;"><strong style="color:#92400e;">💡 Pro Tip:</strong> <span style="color:#78350f;font-size:13px;">${g.proTip}</span></div>` : ""}
+      ${g.proTip ? `<div style="background:#f8f9fa;border-left:3px solid #15803d;padding:10px 14px;margin-top:14px;"><span style="color:#374151;font-size:13px;line-height:1.6;"><strong style="color:#14532d;">Note:</strong> ${g.proTip}</span></div>` : ""}
     </div>
   `;
   }).join("");
 
-  // Prefer AI-curated upcoming deadlines; fall back to filtered grant list
-  const upcomingDeadlines = aiDeadlines.length > 0
-    ? aiDeadlines.map(item => `<li style="margin-bottom:8px;color:#374151;">${item}</li>`).join("")
+  const upcomingDeadlinesHtml = aiDeadlines.length > 0
+    ? aiDeadlines.map(item => `<li style="margin-bottom:8px;color:#374151;font-size:14px;">${item}</li>`).join("")
     : allGrants
         .filter(g => g.deadline && g.deadline !== "Varies" && g.deadline !== "Rolling")
         .slice(0, 5)
-        .map(g => `<li style="margin-bottom:8px;color:#374151;"><strong>${g.name}</strong> — <span style="color:#d97706;">${g.deadline}</span></li>`)
+        .map(g => `<li style="margin-bottom:8px;color:#374151;font-size:14px;"><strong>${g.name}</strong> &mdash; <span style="color:#92400e;">${g.deadline}</span></li>`)
         .join("");
 
+  const tipsHtml = aiTips.length > 0
+    ? aiTips.map(tip => `<li style="margin-bottom:8px;color:#374151;font-size:14px;line-height:1.65;">${tip}</li>`).join("")
+    : `<li style="margin-bottom:8px;color:#374151;font-size:14px;">Have your EIN, business registration, and financial statements ready before applying</li>
+       <li style="margin-bottom:8px;color:#374151;font-size:14px;">Apply early — many grants close before the official deadline when funds run out</li>
+       <li style="margin-bottom:8px;color:#374151;font-size:14px;">Follow all instructions exactly; incomplete applications are typically disqualified without review</li>
+       <li style="margin-bottom:8px;color:#374151;font-size:14px;">Consider applying for multiple programs simultaneously to increase your chances</li>`;
+
   return `<!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Your Grant Report — GrantCrafter</title>
+<title>Your Grant Report &mdash; GrantCrafter</title>
 <style>
-  @media (max-width: 600px) {
-    .gc-email-wrap { padding: 12px 8px !important; }
-    .gc-card { padding: 16px !important; }
-    .gc-amount { font-size: 20px !important; }
-    .gc-badge-row { flex-wrap: wrap !important; }
-    .apply-btn { width: 100% !important; text-align: center !important; box-sizing: border-box !important; }
+  body { margin:0; padding:0; background:#f3f4f6; }
+  @media only screen and (max-width:600px) {
+    .email-body { padding: 12px !important; }
+    .grant-card { padding: 16px !important; }
+    .grant-amount { font-size: 18px !important; }
+    .apply-btn { display: block !important; text-align: center !important; }
   }
 </style>
 </head>
-<body style="margin:0;padding:0;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#111827;">
+
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f3f4f6;">
+<tr><td align="center" style="padding:24px 16px;">
+<table width="100%" style="max-width:620px;" cellpadding="0" cellspacing="0" border="0">
 
   <!-- Header -->
-  <div style="background:#15803d;padding:32px 24px;text-align:center;">
-    <img src="https://www.grantcrafter.com/logo.png" alt="GrantCrafter" width="80" height="80" style="display:block;margin:0 auto 12px;border-radius:12px;" />
-    <div style="color:#bbf7d0;font-size:16px;font-weight:500;">Your Grant Report is Ready</div>
-  </div>
+  <tr><td style="background:#15803d;border-radius:10px 10px 0 0;padding:28px 32px;text-align:center;">
+    <img src="https://www.grantcrafter.com/logo.png" alt="GrantCrafter" width="72" height="72" style="display:block;margin:0 auto 14px;border-radius:10px;">
+    <div style="color:#bbf7d0;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;">Grant Research Report</div>
+    <div style="color:#ffffff;font-size:22px;font-weight:800;margin-top:6px;">${businessName}</div>
+    <div style="color:#86efac;font-size:13px;margin-top:4px;">${allGrants.length} grants identified &mdash; ${now}</div>
+  </td></tr>
 
-  <!-- Main content -->
-  <div class="gc-email-wrap" style="max-width:680px;margin:0 auto;padding:24px 16px;">
+  <!-- Body -->
+  <tr><td class="email-body" style="background:#ffffff;padding:28px 32px;">
 
     <!-- Intro -->
-    <div class="gc-card" style="background:#ffffff;border-radius:12px;padding:24px;margin-bottom:16px;border:1px solid #e5e7eb;">
-      <div style="font-size:22px;font-weight:800;color:#111827;margin-bottom:6px;">Hi, ${businessName}! 👋</div>
-      <div style="color:#6b7280;font-size:15px;line-height:1.6;">
-        Your personalized grant report is ready — generated on ${now}.
-        We found <strong style="color:#15803d;">${allGrants.length} grant opportunities</strong> matched to your business profile.
-      </div>
-    </div>
+    <p style="font-size:15px;color:#374151;line-height:1.7;margin:0 0 28px;">Your personalized grant report for <strong>${businessName}</strong> is ready. We identified <strong style="color:#15803d;">${allGrants.length} grant opportunities</strong> matched to your business profile. Review your top picks below and use the apply links to begin your applications.</p>
+
+    <!-- Divider -->
+    <hr style="border:none;border-top:1px solid #e5e7eb;margin:0 0 28px;">
 
     <!-- Top Picks -->
-    <div style="margin-bottom:20px;">
-      <div style="font-size:20px;font-weight:800;color:#111827;margin-bottom:16px;">⭐ Your Top Picks</div>
+    <div style="margin-bottom:28px;">
+      <div style="font-size:11px;font-weight:700;color:#15803d;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:14px;">Top Matches</div>
       ${topPicksHtml}
     </div>
 
+    <!-- Divider -->
+    <hr style="border:none;border-top:1px solid #e5e7eb;margin:0 0 28px;">
+
     <!-- All Grants -->
-    <div style="margin-bottom:20px;">
-      <div style="font-size:20px;font-weight:800;color:#111827;margin-bottom:16px;">📋 All Grant Opportunities</div>
+    <div style="margin-bottom:28px;">
+      <div style="font-size:11px;font-weight:700;color:#15803d;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:14px;">All Grant Opportunities</div>
       ${allGrantsHtml}
     </div>
 
-    ${upcomingDeadlines ? `
-    <!-- Upcoming Deadlines -->
-    <div style="background:#ffffff;border-radius:12px;padding:24px;margin-bottom:20px;border:1px solid #e5e7eb;">
-      <div style="font-size:18px;font-weight:700;color:#111827;margin-bottom:16px;">📅 Upcoming Deadlines</div>
-      <ul style="margin:0;padding-left:20px;">
-        ${upcomingDeadlines}
-      </ul>
+    ${upcomingDeadlinesHtml ? `
+    <!-- Divider -->
+    <hr style="border:none;border-top:1px solid #e5e7eb;margin:0 0 28px;">
+
+    <!-- Deadlines -->
+    <div style="margin-bottom:28px;">
+      <div style="font-size:11px;font-weight:700;color:#15803d;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:14px;">Upcoming Deadlines</div>
+      <ul style="margin:0;padding-left:18px;">${upcomingDeadlinesHtml}</ul>
     </div>
     ` : ""}
 
+    <!-- Divider -->
+    <hr style="border:none;border-top:1px solid #e5e7eb;margin:0 0 28px;">
+
     <!-- Tips -->
-    <div style="background:#ffffff;border-radius:12px;padding:24px;margin-bottom:20px;border:1px solid #e5e7eb;">
-      <div style="font-size:18px;font-weight:700;color:#111827;margin-bottom:16px;">💡 Tips to Strengthen Your Applications</div>
-      <ul style="margin:0;padding-left:20px;color:#374151;line-height:1.8;font-size:14px;">
-        ${aiTips.length > 0
-          ? aiTips.map(tip => `<li style="margin-bottom:6px;">${tip}</li>`).join("")
-          : `<li>Have your EIN, business registration, and financial statements ready before applying</li>
-            <li>Start with grants that match the most criteria in your profile</li>
-            <li>Apply early — many grants close before the deadline when funds run out</li>
-            <li>Follow the instructions exactly; incomplete applications are disqualified</li>
-            <li>Consider applying for multiple grants simultaneously to increase your chances</li>`
-        }
-      </ul>
+    <div style="margin-bottom:8px;">
+      <div style="font-size:11px;font-weight:700;color:#15803d;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:14px;">Tips to Strengthen Your Applications</div>
+      <ul style="margin:0;padding-left:18px;">${tipsHtml}</ul>
     </div>
 
-    <!-- Footer -->
-    <div style="text-align:center;padding:24px 0;color:#9ca3af;font-size:12px;line-height:1.6;">
-      <div>© 2026 GrantCrafter. All rights reserved.</div>
-      <div style="margin-top:8px;">Questions? <a href="mailto:support@grantcrafter.com" style="color:#15803d;">support@grantcrafter.com</a></div>
-      <div style="margin-top:12px;max-width:480px;margin-left:auto;margin-right:auto;">
-        <strong>Disclaimer:</strong> This report is for informational purposes only and does not constitute legal or financial advice. 
-        Grant availability, amounts, and deadlines may change. Always verify information directly with the granting organization before applying.
-      </div>
-    </div>
+  </td></tr>
 
-  </div>
+  <!-- Footer -->
+  <tr><td style="background:#f8f9fa;border-radius:0 0 10px 10px;border-top:1px solid #e5e7eb;padding:22px 32px;">
+    <p style="margin:0 0 8px;font-size:12px;color:#6b7280;line-height:1.7;">
+      <strong style="color:#374151;">Disclaimer:</strong> This report is provided for informational purposes only and does not constitute legal or financial advice. Grant availability, eligibility requirements, award amounts, and deadlines are subject to change. Always verify information directly with the granting organization before applying.
+    </p>
+    <p style="margin:0;font-size:12px;color:#9ca3af;">GrantCrafter &middot; <a href="https://www.grantcrafter.com" style="color:#15803d;text-decoration:none;">grantcrafter.com</a> &middot; <a href="mailto:support@grantcrafter.com" style="color:#15803d;text-decoration:none;">support@grantcrafter.com</a></p>
+  </td></tr>
+
+</table>
+</td></tr>
+</table>
+
 </body>
 </html>`;
 }
