@@ -61,6 +61,10 @@ export async function POST(req: NextRequest) {
         },
       ],
       automatic_tax: { enabled: true },
+      payment_intent_data: {
+        statement_descriptor: "GRANTCRAFTER",
+        description: "GrantCrafter - Business Grant Report",
+      },
       customer_email: email,
       success_url: `${appUrl}/thank-you?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl}/?canceled=true`,
