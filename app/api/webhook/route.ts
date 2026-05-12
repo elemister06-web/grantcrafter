@@ -60,13 +60,16 @@ function buildEmail(grants: ReturnType<typeof parseGrantsFromReport>, businessNa
   const aiTips = extractAiTips(rawReport);
   const aiDeadlines = extractUpcomingDeadlines(rawReport);
 
+  // Truncate long deadline text cleanly
+  const fmtDeadline = (d: string) => d.length > 60 ? d.slice(0, 57).trimEnd() + "..." : d;
+
   // Top picks — clean cards, no emojis
   const topPicksHtml = top3.map(g => `
     <div style="background:#f0fdf4;border-radius:10px;padding:20px;margin-bottom:12px;border:1px solid #bbf7d0;border-left:4px solid #15803d;">
       <div style="font-size:15px;font-weight:700;color:#14532d;margin-bottom:4px;">${g.name}</div>
       <div style="color:#6b7280;font-size:13px;margin-bottom:8px;">${g.organization}</div>
       <div style="font-size:22px;font-weight:800;color:#15803d;margin-bottom:${g.deadline ? '4px' : '0'};">${g.amount}</div>
-      ${g.deadline ? `<div style="color:#92400e;font-size:12px;font-weight:600;">Deadline: ${g.deadline}</div>` : ""}
+      ${g.deadline ? `<div style="color:#92400e;font-size:12px;font-weight:600;">${fmtDeadline(g.deadline)}</div>` : ""}
     </div>
   `).join("");
 
@@ -140,18 +143,18 @@ function buildEmail(grants: ReturnType<typeof parseGrantsFromReport>, businessNa
 <table width="100%" style="max-width:620px;" cellpadding="0" cellspacing="0" border="0">
 
   <!-- Header -->
-  <tr><td style="background:#15803d;border-radius:10px 10px 0 0;padding:28px 32px;text-align:center;">
-    <img src="https://www.grantcrafter.com/logo.png" alt="GrantCrafter" width="72" height="72" style="display:block;margin:0 auto 14px;border-radius:10px;">
-    <div style="color:#bbf7d0;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;">Grant Research Report</div>
-    <div style="color:#ffffff;font-size:22px;font-weight:800;margin-top:6px;">${businessName}</div>
-    <div style="color:#86efac;font-size:13px;margin-top:4px;">${allGrants.length} grants identified &mdash; ${now}</div>
+  <tr><td style="background:#15803d;border-radius:10px 10px 0 0;padding:32px 32px 28px;">
+    <div style="font-size:11px;font-weight:700;color:#86efac;text-transform:uppercase;letter-spacing:0.14em;margin-bottom:10px;">GrantCrafter</div>
+    <div style="font-size:24px;font-weight:800;color:#ffffff;line-height:1.2;margin-bottom:6px;">Your Grant Report is Ready</div>
+    <div style="font-size:14px;color:#bbf7d0;">${businessName} &mdash; ${allGrants.length} opportunities matched</div>
   </td></tr>
 
   <!-- Body -->
   <tr><td class="email-body" style="background:#ffffff;padding:28px 32px;">
 
-    <!-- Intro -->
-    <p style="font-size:15px;color:#374151;line-height:1.7;margin:0 0 28px;">Your personalized grant report for <strong>${businessName}</strong> is ready. We identified <strong style="color:#15803d;">${allGrants.length} grant opportunities</strong> matched to your business profile. Review your top picks below and use the apply links to begin your applications.</p>
+    <!-- Greeting -->
+    <p style="font-size:16px;font-weight:700;color:#111827;margin:0 0 10px;">Hello, ${businessName},</p>
+    <p style="font-size:15px;color:#374151;line-height:1.7;margin:0 0 28px;">We researched federal, state, local, and private grant programs and found <strong style="color:#15803d;">${allGrants.length} opportunities</strong> that match your business profile. Your top picks are highlighted below, followed by the full list with apply links and pro tips for each program.</p>
 
     <!-- Divider -->
     <hr style="border:none;border-top:1px solid #e5e7eb;margin:0 0 28px;">
