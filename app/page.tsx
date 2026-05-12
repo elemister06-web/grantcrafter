@@ -10,6 +10,18 @@ function HomeContent() {
 
   return (
     <div style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", color: "#111827" }}>
+      <style>{`
+        @media (max-width: 768px) {
+          .gc-solution-grid { grid-template-columns: 1fr !important; }
+          .gc-footer-flex { flex-direction: column !important; gap: 32px !important; }
+          .gc-footer-links { flex-direction: row !important; gap: 32px !important; }
+          .gc-hero h1 { font-size: 36px !important; letter-spacing: -0.5px !important; }
+          .gc-trust-bar { gap: 16px !important; }
+          .gc-how-grid { grid-template-columns: 1fr !important; }
+          .gc-problem-grid { grid-template-columns: 1fr !important; }
+          .gc-section { padding: 56px 20px !important; }
+        }
+      `}</style>
 
       {/* Nav */}
       <nav style={{ background: "#ffffff", borderBottom: "1px solid #e5e7eb", padding: "0 16px", position: "sticky", top: 0, zIndex: 50 }}>
@@ -33,17 +45,13 @@ function HomeContent() {
       {/* Hero */}
       <section style={{ background: "linear-gradient(135deg, #15803d 0%, #166534 100%)", padding: "80px 24px", textAlign: "center" }}>
         <div style={{ maxWidth: "760px", margin: "0 auto" }}>
-          <div style={{ display: "inline-block", background: "rgba(255,255,255,0.15)", color: "#ffffff", padding: "6px 18px", borderRadius: "20px", fontSize: "13px", fontWeight: "600", marginBottom: "24px", border: "1px solid rgba(255,255,255,0.3)" }}>
-            Built for small businesses · Not nonprofits · No subscription ever
+          <div className="gc-hero">
+            <h1 style={{ color: "#ffffff", fontSize: "clamp(34px, 5vw, 56px)", fontWeight: "900", margin: "0 0 20px", lineHeight: "1.1", letterSpacing: "-1.5px" }}>
+              Your Personalized<br />Grant List — In Minutes
+            </h1>
           </div>
-          <h1 style={{ color: "#ffffff", fontSize: "clamp(34px, 5vw, 56px)", fontWeight: "900", margin: "0 0 20px", lineHeight: "1.1", letterSpacing: "-1.5px" }}>
-            Your Personalized<br />Grant List — In Minutes
-          </h1>
-          <p style={{ color: "#bbf7d0", fontSize: "19px", lineHeight: "1.65", margin: "0 0 12px", maxWidth: "580px", marginLeft: "auto", marginRight: "auto" }}>
+          <p style={{ color: "#bbf7d0", fontSize: "19px", lineHeight: "1.65", margin: "0 0 40px", maxWidth: "580px", marginLeft: "auto", marginRight: "auto" }}>
             Tell us about your business. We research up to 25 real grants you may qualify for — federal, state, local, and private — and deliver them straight to your inbox.
-          </p>
-          <p style={{ color: "#86efac", fontSize: "15px", fontWeight: "600", margin: "0 0 40px" }}>
-            No subscription. No account. $19.99, one time.
           </p>
           <a
             href="/get-report"
@@ -59,12 +67,12 @@ function HomeContent() {
 
       {/* Trust bar */}
       <div style={{ background: "#f0fdf4", borderBottom: "1px solid #bbf7d0", padding: "16px 24px" }}>
-        <div style={{ maxWidth: "900px", margin: "0 auto", display: "flex", justifyContent: "center", alignItems: "center", gap: "40px", flexWrap: "wrap" }}>
+        <div className="gc-trust-bar" style={{ maxWidth: "900px", margin: "0 auto", display: "flex", justifyContent: "center", alignItems: "center", gap: "40px", flexWrap: "wrap" }}>
           {[
             { icon: "⚡", text: "Report in ~2 minutes" },
             { icon: "🏛️", text: "Federal, state & local grants" },
             { icon: "🎯", text: "Personalized to your business" },
-            { icon: "💳", text: "$19.99 — pay once" },
+            { icon: "📋", text: "Up to 25 matched grants" },
             { icon: "✅", text: "7-day money-back guarantee" },
           ].map((item, i) => (
             <div key={i} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", fontWeight: "600", color: "#166534" }}>
@@ -76,7 +84,7 @@ function HomeContent() {
       </div>
 
       {/* The Problem */}
-      <section style={{ padding: "80px 24px", background: "#ffffff" }}>
+      <section className="gc-section" style={{ padding: "80px 24px", background: "#ffffff" }}>
         <div style={{ maxWidth: "900px", margin: "0 auto" }}>
           <h2 style={{ textAlign: "center", fontSize: "34px", fontWeight: "800", margin: "0 0 16px", color: "#111827" }}>
             Finding grants is a full-time job you don't have.
@@ -84,7 +92,7 @@ function HomeContent() {
           <p style={{ textAlign: "center", color: "#6b7280", fontSize: "17px", margin: "0 0 48px", lineHeight: "1.6" }}>
             Most grant tools are built for nonprofits. The free databases require you to search manually. Consultants charge $300/hour. And half the results you find don't even apply to your business.
           </p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "20px" }}>
+          <div className="gc-problem-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "20px" }}>
             {[
               { emoji: "⏱️", title: "Hours of manual research", body: "Grants.gov alone lists 1,000+ programs. Sorting through them to find what you actually qualify for takes days." },
               { emoji: "📋", title: "Tools built for nonprofits", body: "Instrumentl, GrantStation, Candid — all designed for 501(c)(3)s. If you're a for-profit small business, you're an afterthought." },
@@ -101,8 +109,8 @@ function HomeContent() {
       </section>
 
       {/* Solution / What you get */}
-      <section style={{ padding: "80px 24px", background: "#f9fafb" }}>
-        <div style={{ maxWidth: "900px", margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "56px", alignItems: "center" }}>
+      <section className="gc-section" style={{ padding: "80px 24px", background: "#f9fafb" }}>
+        <div className="gc-solution-grid" style={{ maxWidth: "900px", margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "56px", alignItems: "center" }}>
           <div>
             <div style={{ display: "inline-block", background: "#dcfce7", color: "#15803d", fontSize: "13px", fontWeight: "700", padding: "5px 14px", borderRadius: "20px", marginBottom: "20px" }}>
               The GrantCrafter Difference
@@ -131,90 +139,116 @@ function HomeContent() {
           </div>
 
           {/* Sample report card */}
-          <div style={{ background: "#ffffff", borderRadius: "16px", border: "1px solid #e5e7eb", overflow: "hidden", boxShadow: "0 8px 32px rgba(0,0,0,0.08)" }}>
-            <div style={{ background: "#15803d", padding: "16px 20px" }}>
-              <div style={{ color: "#ffffff", fontWeight: "800", fontSize: "14px", marginBottom: "2px" }}>Sample GrantCrafter Report</div>
-              <div style={{ color: "#bbf7d0", fontSize: "12px" }}>Small Business · Cincinnati, OH · 3 employees</div>
+          <div style={{ background: "#ffffff", borderRadius: "16px", border: "1px solid #e5e7eb", overflow: "hidden", boxShadow: "0 8px 32px rgba(0,0,0,0.1)" }}>
+            {/* Card header */}
+            <div style={{ background: "#15803d", padding: "18px 22px" }}>
+              <div style={{ color: "#ffffff", fontWeight: "800", fontSize: "15px", marginBottom: "3px" }}>Your GrantCrafter Report</div>
+              <div style={{ color: "#bbf7d0", fontSize: "13px" }}>Acme Bakery · Cincinnati, OH · Food &amp; Beverage</div>
+              <div style={{ color: "#86efac", fontSize: "12px", marginTop: "4px" }}>20 grants matched · Generated in 2 min</div>
             </div>
-            <div style={{ padding: "16px" }}>
-              {[
-                { name: "SBA SBIR Program", amount: "Up to $275,000", badge: "Federal", color: "#1d4ed8" },
-                { name: "USDA Rural Business Development", amount: "Up to $500,000", badge: "Federal", color: "#1d4ed8" },
-                { name: "Ohio TechCred Program", amount: "Up to $30,000", badge: "State", color: "#7e22ce" },
-                { name: "MORTAR Cincinnati Fellowship", amount: "Stipend + Network", badge: "Local", color: "#c2410c" },
-                { name: "Verizon Digital Ready Grant", amount: "$10,000", badge: "Corporate", color: "#0f766e" },
-              ].map((g, i) => (
-                <div key={i} style={{ background: "#f9fafb", borderRadius: "8px", padding: "10px 14px", marginBottom: "8px", border: "1px solid #f3f4f6" }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
-                    <span style={{ fontWeight: "700", fontSize: "13px", color: "#111827" }}>{g.name}</span>
-                    <span style={{ background: g.color, color: "#fff", fontSize: "10px", padding: "2px 7px", borderRadius: "20px", fontWeight: "600", flexShrink: 0, marginLeft: "8px" }}>{g.badge}</span>
-                  </div>
-                  <div style={{ fontSize: "15px", fontWeight: "800", color: "#15803d" }}>{g.amount}</div>
+
+            {/* Top picks label */}
+            <div style={{ background: "#f0fdf4", padding: "10px 22px", borderBottom: "1px solid #dcfce7" }}>
+              <span style={{ fontSize: "12px", fontWeight: "700", color: "#15803d", textTransform: "uppercase", letterSpacing: "0.08em" }}>Top Matches for You</span>
+            </div>
+
+            {/* Grant cards */}
+            {[
+              { name: "SBA Small Business Grant", amount: "Up to $250,000", badge: "Federal", color: "#1d4ed8", match: "Strong match" },
+              { name: "Ohio TechCred Program", amount: "Up to $30,000", badge: "State", color: "#7e22ce", match: "Strong match" },
+              { name: "USDA Rural Business Dev", amount: "Up to $500,000", badge: "Federal", color: "#1d4ed8", match: "Good match" },
+              { name: "Hello Alice Small Biz Grant", amount: "$10,000", badge: "Private", color: "#0f766e", match: "Strong match" },
+              { name: "Verizon Digital Ready", amount: "$10,000", badge: "Corporate", color: "#0f766e", match: "Good match" },
+            ].map((g, i) => (
+              <div key={i} style={{ padding: "12px 22px", borderBottom: "1px solid #f3f4f6", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: "700", fontSize: "13px", color: "#111827", marginBottom: "2px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{g.name}</div>
+                  <div style={{ fontSize: "16px", fontWeight: "800", color: "#15803d" }}>{g.amount}</div>
                 </div>
-              ))}
-              <div style={{ textAlign: "center", color: "#9ca3af", fontSize: "12px", paddingTop: "8px", fontStyle: "italic" }}>+ 15 more grants in your full report</div>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px", flexShrink: 0 }}>
+                  <span style={{ background: g.color, color: "#fff", fontSize: "10px", padding: "2px 8px", borderRadius: "20px", fontWeight: "700" }}>{g.badge}</span>
+                  <span style={{ background: "#f0fdf4", color: "#15803d", fontSize: "10px", padding: "2px 8px", borderRadius: "20px", fontWeight: "600", border: "1px solid #bbf7d0" }}>{g.match}</span>
+                </div>
+              </div>
+            ))}
+
+            {/* Footer */}
+            <div style={{ padding: "14px 22px", background: "#f9fafb", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span style={{ color: "#9ca3af", fontSize: "12px", fontStyle: "italic" }}>+ 15 more grants in your report</span>
+              <span style={{ background: "#15803d", color: "#ffffff", fontSize: "12px", fontWeight: "700", padding: "5px 14px", borderRadius: "8px" }}>View Full Report →</span>
             </div>
           </div>
         </div>
       </section>
 
       {/* vs. Alternatives */}
-      <section style={{ padding: "80px 24px", background: "#f9fafb" }}>
+      <section id="vs" className="gc-section" style={{ padding: "80px 24px", background: "#ffffff" }}>
         <div style={{ maxWidth: "800px", margin: "0 auto" }}>
           <h2 style={{ textAlign: "center", fontSize: "34px", fontWeight: "800", margin: "0 0 12px", color: "#111827" }}>How We Compare</h2>
           <p style={{ textAlign: "center", color: "#6b7280", fontSize: "17px", margin: "0 0 40px" }}>There&apos;s no other service that does exactly what we do.</p>
-          <div style={{ background: "#ffffff", borderRadius: "16px", border: "1px solid #e5e7eb", overflow: "hidden" }}>
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "14px", minWidth: "560px" }}>
-                <thead>
-                  <tr style={{ background: "#f9fafb" }}>
-                    <th style={{ padding: "14px 20px", textAlign: "left", fontWeight: "700", color: "#374151", borderBottom: "1px solid #e5e7eb" }}>Option</th>
-                    <th style={{ padding: "14px 16px", textAlign: "center", fontWeight: "700", color: "#374151", borderBottom: "1px solid #e5e7eb" }}>Cost</th>
-                    <th style={{ padding: "14px 16px", textAlign: "center", fontWeight: "700", color: "#374151", borderBottom: "1px solid #e5e7eb" }}>Personalized?</th>
-                    <th style={{ padding: "14px 16px", textAlign: "center", fontWeight: "700", color: "#374151", borderBottom: "1px solid #e5e7eb" }}>For-profit biz?</th>
-                    <th style={{ padding: "14px 16px", textAlign: "center", fontWeight: "700", color: "#374151", borderBottom: "1px solid #e5e7eb" }}>Speed</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[
-                    { name: "GrantCrafter", cost: "$19.99 once", personal: "✅ Yes", biz: "✅ Yes", speed: "~2 min", highlight: true },
-                    { name: "Grant Consultant", cost: "$200–$500/hr", personal: "✅ Yes", biz: "✅ Yes", speed: "Days–weeks", highlight: false },
-                    { name: "Instrumentl", cost: "$299–$999/mo", personal: "✅ Yes", biz: "Primarily nonprofits", speed: "Ongoing", highlight: false },
-                    { name: "GrantWatch", cost: "$49/mo", personal: "DIY search", biz: "Partial", speed: "DIY", highlight: false },
-                    { name: "Grants.gov", cost: "Free", personal: "DIY search", biz: "Partial", speed: "DIY hours", highlight: false },
-                    { name: "Hello Alice", cost: "Free", personal: "Generic list", biz: "✅ Yes", speed: "Ongoing", highlight: false },
-                  ].map((row, i) => (
-                    <tr key={i} style={{ background: row.highlight ? "#f0fdf4" : "transparent", borderBottom: "1px solid #f3f4f6" }}>
-                      <td style={{ padding: "14px 20px", fontWeight: row.highlight ? "800" : "500", color: row.highlight ? "#15803d" : "#374151" }}>
-                        {row.highlight && <span style={{ background: "#15803d", color: "#fff", fontSize: "11px", padding: "2px 8px", borderRadius: "4px", marginRight: "8px", fontWeight: "700" }}>YOU</span>}
-                        {row.name}
-                      </td>
-                      <td style={{ padding: "14px 16px", textAlign: "center", fontWeight: row.highlight ? "700" : "400", color: row.highlight ? "#15803d" : "#374151" }}>{row.cost}</td>
-                      <td style={{ padding: "14px 16px", textAlign: "center", color: "#374151" }}>{row.personal}</td>
-                      <td style={{ padding: "14px 16px", textAlign: "center", color: "#374151" }}>{row.biz}</td>
-                      <td style={{ padding: "14px 16px", textAlign: "center", color: row.highlight ? "#15803d" : "#374151", fontWeight: row.highlight ? "700" : "400" }}>{row.speed}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            {[
+              { name: "GrantCrafter", cost: "$19.99 once", personal: true, biz: true, speed: "~2 min", highlight: true },
+              { name: "Grant Consultant", cost: "$200–$500/hr", personal: true, biz: true, speed: "Days–weeks", highlight: false },
+              { name: "Instrumentl", cost: "$299–$999/mo", personal: true, biz: false, speed: "Ongoing", highlight: false },
+              { name: "GrantWatch", cost: "$49/mo", personal: false, biz: null, speed: "DIY", highlight: false },
+              { name: "Grants.gov", cost: "Free", personal: false, biz: null, speed: "DIY hours", highlight: false },
+              { name: "Hello Alice", cost: "Free", personal: false, biz: true, speed: "Ongoing", highlight: false },
+            ].map((row, i) => (
+              <div key={i} style={{
+                background: row.highlight ? "#f0fdf4" : "#ffffff",
+                border: row.highlight ? "2px solid #15803d" : "1px solid #e5e7eb",
+                borderRadius: "12px",
+                padding: "18px 22px",
+                display: "flex",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: "12px",
+              }}>
+                {/* Name + cost */}
+                <div style={{ flex: "1 1 160px", minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "2px" }}>
+                    {row.highlight && (
+                      <span style={{ background: "#15803d", color: "#fff", fontSize: "11px", padding: "2px 8px", borderRadius: "4px", fontWeight: "700", flexShrink: 0 }}>YOU</span>
+                    )}
+                    <span style={{ fontWeight: row.highlight ? "800" : "600", fontSize: "15px", color: row.highlight ? "#15803d" : "#111827" }}>{row.name}</span>
+                  </div>
+                  <div style={{ fontSize: "14px", fontWeight: row.highlight ? "700" : "400", color: row.highlight ? "#15803d" : "#6b7280" }}>{row.cost}</div>
+                </div>
+                {/* Attributes */}
+                <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", flexShrink: 0 }}>
+                  <div style={{ textAlign: "center", minWidth: "90px" }}>
+                    <div style={{ fontSize: "11px", color: "#9ca3af", marginBottom: "3px", fontWeight: "500" }}>Personalized?</div>
+                    <div style={{ fontSize: "16px" }}>{row.personal ? "✅" : "❌"}</div>
+                  </div>
+                  <div style={{ textAlign: "center", minWidth: "90px" }}>
+                    <div style={{ fontSize: "11px", color: "#9ca3af", marginBottom: "3px", fontWeight: "500" }}>For-profit biz?</div>
+                    <div style={{ fontSize: "16px" }}>{row.biz === true ? "✅" : row.biz === false ? "❌" : "⚠️"}</div>
+                  </div>
+                  <div style={{ textAlign: "center", minWidth: "80px" }}>
+                    <div style={{ fontSize: "11px", color: "#9ca3af", marginBottom: "3px", fontWeight: "500" }}>Speed</div>
+                    <div style={{ fontSize: "13px", fontWeight: row.highlight ? "700" : "400", color: row.highlight ? "#15803d" : "#374151" }}>{row.speed}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
           <p style={{ textAlign: "center", color: "#9ca3af", fontSize: "12px", marginTop: "12px" }}>Pricing and features based on publicly available information. All trademarks belong to their respective owners.</p>
         </div>
       </section>
 
       {/* How It Works */}
-      <section id="how-it-works" style={{ padding: "80px 24px", background: "#ffffff" }}>
+      <section id="how-it-works" className="gc-section" style={{ padding: "80px 24px", background: "#f9fafb" }}>
         <div style={{ maxWidth: "900px", margin: "0 auto" }}>
           <h2 style={{ textAlign: "center", fontSize: "34px", fontWeight: "800", margin: "0 0 12px", color: "#111827" }}>How It Works</h2>
           <p style={{ textAlign: "center", color: "#6b7280", fontSize: "17px", margin: "0 0 48px" }}>Three steps. Two minutes. Done.</p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "24px" }}>
+          <div className="gc-how-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "24px" }}>
             {[
               { step: "1", icon: "📝", title: "Tell us about your business", desc: "Fill out a simple form — business type, industry, location, size, and any ownership qualifiers. Takes about 2 minutes." },
-              { step: "2", icon: "💳", title: "Pay $19.99 — one time", desc: "No subscription, no recurring charges, no account to manage. Secure checkout via Stripe. Pay once, that's it." },
+              { step: "2", icon: "💳", title: "Pay $19.99 — one time", desc: "No recurring charges, no account to manage. Secure checkout via Stripe. Pay once, that's it." },
               { step: "3", icon: "📬", title: "Your report hits your inbox", desc: "Within ~2 minutes, a personalized report with up to 25 real grant opportunities lands in your email. Ready to act on immediately." },
             ].map(item => (
-              <div key={item.step} style={{ background: "#f9fafb", borderRadius: "16px", padding: "32px 24px", textAlign: "center", border: "1px solid #e5e7eb" }}>
+              <div key={item.step} style={{ background: "#ffffff", borderRadius: "16px", padding: "32px 24px", textAlign: "center", border: "1px solid #e5e7eb" }}>
                 <div style={{ width: "52px", height: "52px", background: "#15803d", color: "#ffffff", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px", fontWeight: "900", margin: "0 auto 16px" }}>
                   {item.step}
                 </div>
@@ -227,10 +261,8 @@ function HomeContent() {
         </div>
       </section>
 
-
-
       {/* Pricing */}
-      <section id="pricing" style={{ padding: "80px 24px", background: "#ffffff" }}>
+      <section id="pricing" className="gc-section" style={{ padding: "80px 24px", background: "#ffffff" }}>
         <div style={{ maxWidth: "480px", margin: "0 auto", textAlign: "center" }}>
           <h2 style={{ fontSize: "34px", fontWeight: "800", margin: "0 0 12px", color: "#111827" }}>Simple Pricing</h2>
           <p style={{ color: "#6b7280", fontSize: "17px", margin: "0 0 40px" }}>One report. One price. No surprises ever.</p>
@@ -246,7 +278,7 @@ function HomeContent() {
                 "Direct Apply Now links — verified",
                 "Pro tips tailored to your profile",
                 "Delivered to your inbox in ~2 minutes",
-                "No account. No subscription. Ever.",
+                "One-time payment. No recurring charges.",
               ].map((item, i) => (
                 <li key={i} style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "11px", fontSize: "15px", color: "#374151" }}>
                   <span style={{ color: "#15803d", fontWeight: "700", flexShrink: 0 }}>✓</span> {item}
@@ -265,7 +297,7 @@ function HomeContent() {
       </section>
 
       {/* FAQ */}
-      <section style={{ padding: "80px 24px", background: "#f9fafb" }}>
+      <section className="gc-section" style={{ padding: "80px 24px", background: "#f9fafb" }}>
         <div style={{ maxWidth: "640px", margin: "0 auto" }}>
           <h2 style={{ textAlign: "center", fontSize: "34px", fontWeight: "800", margin: "0 0 48px", color: "#111827" }}>Questions</h2>
           {[
@@ -293,7 +325,7 @@ function HomeContent() {
             There are grants with your name on them.
           </h2>
           <p style={{ color: "#bbf7d0", fontSize: "18px", margin: "0 0 40px", lineHeight: "1.6" }}>
-            Stop leaving money on the table. Get your personalized report in ~2 minutes. $19.99, no subscription.
+            Stop leaving money on the table. Get your personalized report in ~2 minutes. $19.99 — pay once, done.
           </p>
           <a
             href="/get-report"
@@ -310,12 +342,12 @@ function HomeContent() {
       {/* Footer */}
       <footer style={{ background: "#111827", padding: "48px 24px", color: "#9ca3af" }}>
         <div style={{ maxWidth: "900px", margin: "0 auto" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "24px", marginBottom: "32px" }}>
+          <div className="gc-footer-flex" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "24px", marginBottom: "32px" }}>
             <div>
               <div style={{ fontSize: "20px", fontWeight: "800", color: "#ffffff", marginBottom: "8px" }}>GrantCrafter</div>
               <div style={{ fontSize: "14px", lineHeight: "1.6", maxWidth: "280px" }}>AI-powered grant research for small businesses. Real opportunities, delivered fast.</div>
             </div>
-            <div style={{ display: "flex", gap: "40px" }}>
+            <div className="gc-footer-links" style={{ display: "flex", gap: "40px" }}>
               <div>
                 <div style={{ color: "#ffffff", fontWeight: "600", fontSize: "14px", marginBottom: "12px" }}>Product</div>
                 {[["Get a Report", "/get-report"], ["How It Works", "#how-it-works"], ["Pricing", "#pricing"], ["vs. Alternatives", "#vs"]].map(([label, href]) => (

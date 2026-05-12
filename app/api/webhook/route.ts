@@ -61,10 +61,10 @@ function buildEmail(grants: ReturnType<typeof parseGrantsFromReport>, businessNa
   const aiDeadlines = extractUpcomingDeadlines(rawReport);
 
   const topPicksHtml = top3.map(g => `
-    <div style="background:#dcfce7;border-radius:10px;padding:20px;margin-bottom:16px;border:1px solid #bbf7d0;">
-      <div style="font-size:18px;font-weight:700;color:#15803d;margin-bottom:4px;">⭐ ${g.name}</div>
-      <div style="color:#374151;font-size:14px;margin-bottom:8px;">${g.organization}</div>
-      <div style="font-size:22px;font-weight:800;color:#15803d;">${g.amount}</div>
+    <div class="gc-card" style="background:#ffffff;border-radius:10px;padding:20px;margin-bottom:12px;border:1px solid #e5e7eb;border-top:3px solid #15803d;">
+      <div style="font-size:16px;font-weight:700;color:#15803d;margin-bottom:4px;">⭐ ${g.name}</div>
+      <div style="color:#6b7280;font-size:13px;margin-bottom:6px;">${g.organization}</div>
+      <div class="gc-amount" style="font-size:22px;font-weight:800;color:#15803d;">${g.amount}</div>
       ${g.deadline ? `<div style="color:#d97706;font-size:13px;margin-top:4px;">📅 Deadline: ${g.deadline}</div>` : ""}
     </div>
   `).join("");
@@ -72,7 +72,7 @@ function buildEmail(grants: ReturnType<typeof parseGrantsFromReport>, businessNa
   const allGrantsHtml = allGrants.map(g => {
     const badgeColor = getBadgeColor(g.type);
     const applyBtn = g.applyUrl
-      ? `<a href="${g.applyUrl}" style="display:inline-block;background:#15803d;color:#ffffff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700;font-size:15px;margin-top:16px;">Apply Now →</a>`
+      ? `<a href="${g.applyUrl}" class="apply-btn" style="display:inline-block;background:#15803d;color:#ffffff;padding:10px 22px;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px;margin-top:12px;">Apply Now →</a>`
       : "";
     // Eligibility badge color
     const eligBg = g.eligibilityAssessment.toLowerCase().includes("strong")
@@ -85,18 +85,18 @@ function buildEmail(grants: ReturnType<typeof parseGrantsFromReport>, businessNa
       ? "#bbf7d0" : g.eligibilityAssessment.toLowerCase().includes("good")
       ? "#bfdbfe" : "#fde68a";
     return `
-    <div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:24px;margin-bottom:20px;">
-      <div style="font-size:20px;font-weight:800;color:#111827;margin-bottom:8px;">${g.name}</div>
-      <div style="margin-bottom:12px;display:flex;align-items:center;flex-wrap:wrap;gap:8px;">
-        <span style="color:#6b7280;font-size:14px;">${g.organization}</span>
-        <span style="background:${badgeColor};color:#fff;font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px;">${g.type}</span>
-        ${g.eligibilityAssessment ? `<span style="background:${eligBg};color:${eligColor};font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;border:1px solid ${eligBorder};">${g.eligibilityAssessment}</span>` : ""}
+    <div class="gc-card" style="background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:20px;margin-bottom:16px;">
+      <div style="font-size:18px;font-weight:800;color:#111827;margin-bottom:6px;">${g.name}</div>
+      <div class="gc-badge-row" style="margin-bottom:10px;display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
+        <span style="color:#6b7280;font-size:13px;">${g.organization}</span>
+        <span style="background:${badgeColor};color:#fff;font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;">${g.type}</span>
+        ${g.eligibilityAssessment ? `<span style="background:${eligBg};color:${eligColor};font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;border:1px solid ${eligBorder};">${g.eligibilityAssessment}</span>` : ""}
       </div>
-      <div style="font-size:26px;font-weight:800;color:#15803d;margin-bottom:6px;">${g.amount}</div>
-      ${g.deadline ? `<div style="color:#d97706;font-size:14px;font-weight:600;margin-bottom:12px;">📅 Deadline: ${g.deadline}</div>` : ""}
-      <div style="color:#374151;font-size:15px;line-height:1.6;margin-bottom:12px;"><strong>What It Funds:</strong> ${g.whatItFunds}</div>
+      <div class="gc-amount" style="font-size:24px;font-weight:800;color:#15803d;margin-bottom:5px;">${g.amount}</div>
+      ${g.deadline ? `<div style="color:#d97706;font-size:13px;font-weight:600;margin-bottom:10px;">📅 Deadline: ${g.deadline}</div>` : ""}
+      <div style="color:#374151;font-size:14px;line-height:1.6;margin-bottom:10px;"><strong>What It Funds:</strong> ${g.whatItFunds}</div>
       ${applyBtn}
-      ${g.proTip ? `<div style="background:#fffbeb;border-left:4px solid #d97706;padding:12px 16px;border-radius:0 8px 8px 0;margin-top:16px;"><strong style="color:#92400e;">💡 Pro Tip:</strong> <span style="color:#78350f;font-size:14px;">${g.proTip}</span></div>` : ""}
+      ${g.proTip ? `<div style="background:#fffbeb;border-left:4px solid #d97706;padding:10px 14px;border-radius:0 8px 8px 0;margin-top:12px;"><strong style="color:#92400e;">💡 Pro Tip:</strong> <span style="color:#78350f;font-size:13px;">${g.proTip}</span></div>` : ""}
     </div>
   `;
   }).join("");
@@ -112,7 +112,20 @@ function buildEmail(grants: ReturnType<typeof parseGrantsFromReport>, businessNa
 
   return `<!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Your Grant Report — GrantCrafter</title></head>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your Grant Report — GrantCrafter</title>
+<style>
+  @media (max-width: 600px) {
+    .gc-email-wrap { padding: 12px 8px !important; }
+    .gc-card { padding: 16px !important; }
+    .gc-amount { font-size: 20px !important; }
+    .gc-badge-row { flex-wrap: wrap !important; }
+    .apply-btn { width: 100% !important; text-align: center !important; box-sizing: border-box !important; }
+  }
+</style>
+</head>
 <body style="margin:0;padding:0;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
 
   <!-- Header -->
@@ -122,10 +135,10 @@ function buildEmail(grants: ReturnType<typeof parseGrantsFromReport>, businessNa
   </div>
 
   <!-- Main content -->
-  <div style="max-width:640px;margin:0 auto;padding:24px 16px;">
+  <div class="gc-email-wrap" style="max-width:680px;margin:0 auto;padding:24px 16px;">
 
     <!-- Intro -->
-    <div style="background:#ffffff;border-radius:12px;padding:24px;margin-bottom:20px;border:1px solid #e5e7eb;">
+    <div class="gc-card" style="background:#ffffff;border-radius:12px;padding:24px;margin-bottom:16px;border:1px solid #e5e7eb;">
       <div style="font-size:22px;font-weight:800;color:#111827;margin-bottom:6px;">Hi, ${businessName}! 👋</div>
       <div style="color:#6b7280;font-size:15px;line-height:1.6;">
         Your personalized grant report is ready — generated on ${now}.
