@@ -2,13 +2,15 @@
 
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import ConversionTracker from "./conversion-tracker";
 
 function ThankYouContent() {
   const params = useSearchParams();
-  // We don't have the email here without fetching — keep it generic
   const sessionId = params.get("session_id");
 
   return (
+    <>
+      {sessionId && <ConversionTracker value={19.99} transactionId={sessionId} />}
     <div style={{ minHeight: "100vh", background: "#f9fafb", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px" }}>
 
       {/* Card */}
@@ -64,6 +66,7 @@ function ThankYouContent() {
         </div>
       </div>
     </div>
+    </>
   );
 }
 
