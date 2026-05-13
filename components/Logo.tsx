@@ -20,32 +20,16 @@ export default function Logo({ size = "md", href = "/" }: LogoProps) {
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
     >
-      {/* Warehouse main roof — wide flat industrial style */}
-      <path d="M2 20 L4 14 L40 14 L42 20 Z" fill="#166534" />
-      {/* Roof ridge cap */}
-      <rect x="4" y="13" width="36" height="3" rx="1" fill="#15803d" />
-      {/* Rooftop vents — industrial detail */}
-      <rect x="10" y="10" width="4" height="4" rx="0.5" fill="#166534" />
-      <rect x="20" y="9" width="4" height="5" rx="0.5" fill="#166534" />
-      <rect x="30" y="10" width="4" height="4" rx="0.5" fill="#166534" />
-      {/* Warehouse body */}
-      <rect x="2" y="20" width="40" height="22" rx="1" fill="#15803d" />
-      {/* Large loading dock door — center */}
-      <rect x="14" y="28" width="16" height="14" rx="1.5" fill="white" opacity="0.95" />
-      {/* Dock door horizontal panels */}
-      <line x1="14" y1="32" x2="30" y2="32" stroke="#d1fae5" strokeWidth="1" />
-      <line x1="14" y1="36" x2="30" y2="36" stroke="#d1fae5" strokeWidth="1" />
-      <line x1="14" y1="40" x2="30" y2="40" stroke="#d1fae5" strokeWidth="1" />
-      {/* Dock bumper */}
-      <rect x="13" y="40" width="18" height="2" rx="0.5" fill="#bbf7d0" opacity="0.6" />
-      {/* Left window */}
-      <rect x="5" y="24" width="6" height="5" rx="0.5" fill="white" opacity="0.7" />
-      <line x1="8" y1="24" x2="8" y2="29" stroke="#d1fae5" strokeWidth="0.8" />
-      {/* Right window */}
-      <rect x="33" y="24" width="6" height="5" rx="0.5" fill="white" opacity="0.7" />
-      <line x1="36" y1="24" x2="36" y2="29" stroke="#d1fae5" strokeWidth="0.8" />
-      {/* Ground line */}
-      <rect x="0" y="41" width="44" height="2" rx="1" fill="#166534" opacity="0.5" />
+      {/* Magnifying glass — dark green outer ring */}
+      <circle cx="19" cy="19" r="14.5" fill="#166534" />
+      {/* Magnifying glass — medium green ring */}
+      <circle cx="19" cy="19" r="11.5" fill="#16a34a" />
+      {/* Magnifying glass — light green lens */}
+      <circle cx="19" cy="19" r="9" fill="#dcfce7" />
+      {/* Dollar sign */}
+      <text x="19" y="24" textAnchor="middle" fontFamily="Arial Black, Arial, sans-serif" fontSize="15" fontWeight="900" fill="#166534">$</text>
+      {/* Handle */}
+      <rect x="27.5" y="27" width="12.5" height="4.5" rx="2.25" fill="#166534" transform="rotate(45 27.5 27)" />
     </svg>
   );
 
