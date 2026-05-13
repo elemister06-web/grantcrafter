@@ -15,6 +15,9 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://www.grantcrafter.com",
   },
+  verification: {
+    google: "XNmX9h5bKisTyB3ENeB8zw6OjPDtTa0fUsts-EOdUf8",
+  },
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },
