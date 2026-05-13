@@ -65,6 +65,9 @@ export async function POST(req: NextRequest) {
         statement_descriptor: "GRANTCRAFTER",
         description: "GrantCrafter - Business Grant Report",
       },
+      custom_text: {
+        submit: { message: "🔒 Secured by Stripe · 7-day money-back guarantee · Your grant report delivered by email within 2–3 minutes" },
+      },
       customer_email: email,
       success_url: `${appUrl}/thank-you?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl}/?canceled=true`,
