@@ -1,0 +1,7 @@
+<svg viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="GrantCrafter">
+  <rect width="44" height="44" rx="8" fill="#166534"/>
+  <circle cx="19" cy="18" r="11.5" fill="#15803d"/>
+  <circle cx="19" cy="18" r="9" fill="#dcfce7"/>
+  <text x="19" y="23" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="13" font-weight="900" fill="#166534">$</text>
+  <rect x="26.5" y="25" width="11.5" height="4" rx="2" fill="#15803d" transform="rotate(45 26.5 25)"/>
+</svg>

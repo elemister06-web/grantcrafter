@@ -15,6 +15,17 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://www.grantcrafter.com",
   },
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+    shortcut: "/favicon.svg",
+  },
+  manifest: "/site.webmanifest",
   openGraph: {
     title: "GrantCrafter — Never Miss a Grant Again",
     description:
@@ -56,7 +67,7 @@ const organizationSchema = {
   "@type": "Organization",
   name: "GrantCrafter",
   url: "https://www.grantcrafter.com",
-  logo: "https://www.grantcrafter.com/icon-192.png",
+  logo: "https://www.grantcrafter.com/icon-512.png",
   description:
     "GrantCrafter is an AI-powered monthly grant discovery service for small businesses and nonprofits, operated by Warehouse Web Co.",
   foundingLocation: {
