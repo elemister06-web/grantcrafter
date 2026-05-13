@@ -60,7 +60,8 @@ export async function POST(req: NextRequest) {
           quantity: 1,
         },
       ],
-      automatic_tax: { enabled: true },
+      // automatic_tax requires business address in Stripe Dashboard (Settings → Tax)
+      // automatic_tax: { enabled: true },
       payment_intent_data: {
         statement_descriptor: "GRANTCRAFTER",
         description: "GrantCrafter - Business Grant Report",
