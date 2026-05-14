@@ -60,7 +60,7 @@ function HomeContent() {
             Get My Grant Report — $19.99 →
           </a>
           <div style={{ color: "#86efac", fontSize: "13px", marginTop: "14px" }}>
-            🔒 Secure checkout · 7-day money-back guarantee · Delivered in ~2 minutes
+            🔒 Secure checkout · 7-day money-back guarantee · Delivered in 2 minutes
           </div>
         </div>
       </section>
@@ -69,7 +69,7 @@ function HomeContent() {
       <div style={{ background: "#f0fdf4", borderBottom: "1px solid #bbf7d0", padding: "16px 24px" }}>
         <div className="gc-trust-bar" style={{ maxWidth: "900px", margin: "0 auto", display: "flex", justifyContent: "center", alignItems: "center", gap: "40px", flexWrap: "wrap" }}>
           {[
-            { icon: "⚡", text: "Report in ~2 minutes" },
+            { icon: "⚡", text: "Report in 2 minutes" },
             { icon: "🏛️", text: "Federal, state & local grants" },
             { icon: "🎯", text: "Personalized to your business" },
             { icon: "📋", text: "Up to 25 matched grants" },
@@ -188,7 +188,7 @@ function HomeContent() {
           <p style={{ textAlign: "center", color: "#6b7280", fontSize: "17px", margin: "0 0 40px" }}>There&apos;s no other service that does exactly what we do.</p>
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
             {[
-              { name: "GrantCrafter", cost: "$19.99 once", personal: true, biz: true, speed: "~2 min", highlight: true },
+              { name: "GrantCrafter", cost: "$19.99 once", personal: true, biz: true, speed: "2 min", highlight: true },
               { name: "Grant Consultant", cost: "$200–$500/hr", personal: true, biz: true, speed: "Days–weeks", highlight: false },
               { name: "Instrumentl", cost: "$299–$999/mo", personal: true, biz: false, speed: "Ongoing", highlight: false },
               { name: "GrantWatch", cost: "$49/mo", personal: false, biz: null, speed: "DIY", highlight: false },
@@ -246,7 +246,7 @@ function HomeContent() {
             {[
               { step: "1", icon: "📝", title: "Tell us about your business", desc: "Fill out a simple form — business type, industry, location, size, and any ownership qualifiers. Takes about 2 minutes." },
               { step: "2", icon: "💳", title: "Pay $19.99 — one time", desc: "No recurring charges, no account to manage. Secure checkout via Stripe. Pay once, that's it." },
-              { step: "3", icon: "📬", title: "Your report hits your inbox", desc: "Within ~2 minutes, a personalized report with up to 25 real grant opportunities lands in your email. Ready to act on immediately." },
+              { step: "3", icon: "📬", title: "Your report hits your inbox", desc: "Within 2 minutes, a personalized report with up to 25 real grant opportunities lands in your email. Ready to act on immediately." },
             ].map(item => (
               <div key={item.step} style={{ background: "#ffffff", borderRadius: "16px", padding: "32px 24px", textAlign: "center", border: "1px solid #e5e7eb" }}>
                 <div style={{ width: "52px", height: "52px", background: "#15803d", color: "#ffffff", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px", fontWeight: "900", margin: "0 auto 16px" }}>
@@ -277,7 +277,7 @@ function HomeContent() {
                 "Award amounts & application deadlines",
                 "Direct Apply Now links — verified",
                 "Pro tips tailored to your profile",
-                "Delivered to your inbox in ~2 minutes",
+                "Delivered to your inbox in 2 minutes",
                 "One-time payment. No recurring charges.",
               ].map((item, i) => (
                 <li key={i} style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "11px", fontSize: "15px", color: "#374151" }}>
@@ -325,7 +325,7 @@ function HomeContent() {
             There are grants with your name on them.
           </h2>
           <p style={{ color: "#bbf7d0", fontSize: "18px", margin: "0 0 40px", lineHeight: "1.6" }}>
-            Stop leaving money on the table. Get your personalized report in ~2 minutes. $19.99 — pay once, done.
+            Stop leaving money on the table. Get your personalized report in 2 minutes. $19.99 — pay once, done.
           </p>
           <a
             href="/get-report"
