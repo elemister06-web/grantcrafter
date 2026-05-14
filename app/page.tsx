@@ -1,12 +1,25 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import Logo from "@/components/Logo";
+
+function trackEvent(event_type: string) {
+  fetch("/api/track", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tool: "grant-report", event_type }),
+    keepalive: true,
+  }).catch(() => {});
+}
 
 function HomeContent() {
   const params = useSearchParams();
   const canceled = params.get("canceled");
+
+  useEffect(() => {
+    trackEvent("view");
+  }, []);
 
   return (
     <div style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", color: "#111827" }}>
@@ -55,6 +68,7 @@ function HomeContent() {
           </p>
           <a
             href="/get-report"
+            onClick={() => trackEvent("click")}
             style={{ display: "inline-block", background: "#ffffff", color: "#15803d", padding: "18px 44px", borderRadius: "12px", textDecoration: "none", fontSize: "19px", fontWeight: "900", boxShadow: "0 6px 24px rgba(0,0,0,0.18)" }}
           >
             Get My Grant Report — $19.99 →
@@ -287,6 +301,7 @@ function HomeContent() {
             </ul>
             <a
               href="/get-report"
+              onClick={() => trackEvent("click")}
               style={{ display: "block", background: "#15803d", color: "#ffffff", padding: "17px", borderRadius: "10px", textDecoration: "none", fontSize: "17px", fontWeight: "800", marginBottom: "14px" }}
             >
               Get My Grant Report →
@@ -329,6 +344,7 @@ function HomeContent() {
           </p>
           <a
             href="/get-report"
+            onClick={() => trackEvent("click")}
             style={{ display: "inline-block", background: "#ffffff", color: "#15803d", padding: "18px 48px", borderRadius: "12px", textDecoration: "none", fontSize: "19px", fontWeight: "900", boxShadow: "0 6px 24px rgba(0,0,0,0.18)" }}
           >
             Get My Grant Report — $19.99 →
