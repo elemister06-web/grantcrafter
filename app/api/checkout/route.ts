@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
       custom_text: {
         submit: { message: "🔒 Secured by Stripe · 7-day money-back guarantee · Your grant report delivered by email within 2–3 minutes" },
       },
-      customer_email: email,
+      // customer_email omitted — suppresses Google Pay/Apple Pay express detection; email saved to DB before checkout
       success_url: `${appUrl}/thank-you?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl}/?canceled=true`,
       metadata: {
