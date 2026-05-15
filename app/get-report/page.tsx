@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { loadStripe } from "@stripe/stripe-js";
 import Logo from "@/components/Logo";
 
 const QUALIFIERS = [
@@ -17,6 +18,10 @@ export default function GetReportPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [step, setStep] = useState<"form" | "payment">("form");
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const checkoutRef = useRef<any>(null);
 
   const [form, setForm] = useState({
     email: "",
@@ -45,13 +50,41 @@ export default function GetReportPage() {
     });
   }
 
+  // Mount Stripe embedded checkout once we have a client secret
+  useEffect(() => {
+    if (step !== "payment" || !clientSecret) return;
+
+    const mount = async () => {
+      try {
+        const stripe = await loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+        if (!stripe) {
+          setError("Payment failed to load. Please refresh and try again.");
+          setStep("form");
+          return;
+        }
+        const checkout = await stripe.createEmbeddedCheckoutPage({ clientSecret });
+        checkout.mount("#stripe-checkout");
+        checkoutRef.current = checkout;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Payment failed to load. Please try again.");
+        setStep("form");
+      }
+    };
+
+    mount();
+
+    return () => {
+      checkoutRef.current?.destroy();
+    };
+  }, [step, clientSecret]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError("");
 
     try {
-      const res = await fetch("/api/checkout", {
+      const res = await fetch("/api/checkout-embedded", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
@@ -65,11 +98,15 @@ export default function GetReportPage() {
         return;
       }
 
-      if (data.url) {
-        window.location.href = data.url;
+      if (data.clientSecret) {
+        setClientSecret(data.clientSecret);
+        setStep("payment");
+      } else {
+        setError("Could not start checkout. Please try again.");
       }
     } catch {
       setError("Network error. Please check your connection and try again.");
+    } finally {
       setLoading(false);
     }
   }
@@ -87,14 +124,35 @@ export default function GetReportPage() {
       {/* Header */}
       <div style={{ background: "linear-gradient(135deg, #15803d 0%, #166534 100%)", padding: "48px 24px", textAlign: "center" }}>
         <h1 style={{ color: "#ffffff", fontSize: "32px", fontWeight: "900", margin: "0 0 12px", lineHeight: "1.2" }}>
-          Get Your Grant Report
+          {step === "payment" ? "Complete Your Payment" : "Get Your Grant Report"}
         </h1>
         <p style={{ color: "#bbf7d0", fontSize: "16px", margin: "0", maxWidth: "480px", marginLeft: "auto", marginRight: "auto" }}>
-          Tell us about your business and we'll find real grant opportunities matched to your profile.
+          {step === "payment"
+            ? "Secure payment powered by Stripe. Your report will be emailed to you immediately after payment."
+            : "Tell us about your business and we'll find real grant opportunities matched to your profile."}
         </p>
       </div>
 
+      {/* Payment view */}
+      {step === "payment" && (
+        <div style={{ maxWidth: "720px", margin: "0 auto", padding: "32px 16px" }}>
+          <div style={{ background: "#ffffff", borderRadius: "12px", padding: "24px", border: "1px solid #e5e7eb", marginBottom: "16px" }}>
+            <div id="stripe-checkout" />
+          </div>
+          <div style={{ textAlign: "center" }}>
+            <button
+              type="button"
+              onClick={() => { setStep("form"); setClientSecret(null); }}
+              style={{ background: "transparent", border: "none", color: "#6b7280", fontSize: "14px", cursor: "pointer", textDecoration: "underline" }}
+            >
+              ← Back to form
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Form */}
+      {step === "form" && (
       <div style={{ maxWidth: "640px", margin: "0 auto", padding: "32px 16px" }}>
         <form onSubmit={handleSubmit}>
           <div style={{ background: "#ffffff", borderRadius: "12px", padding: "32px", border: "1px solid #e5e7eb", marginBottom: "16px" }}>
@@ -330,17 +388,18 @@ export default function GetReportPage() {
             disabled={loading}
             style={{ width: "100%", padding: "18px", background: loading ? "#86efac" : "#15803d", color: "#ffffff", fontSize: "18px", fontWeight: "800", border: "none", borderRadius: "12px", cursor: loading ? "not-allowed" : "pointer", transition: "background 0.2s" }}
           >
-            {loading ? "Redirecting to checkout..." : "Get My Grant Report — $19.99 →"}
+            {loading ? "Loading checkout..." : "Continue to Payment — $19.99 →"}
           </button>
 
           <div style={{ textAlign: "center", marginTop: "12px", color: "#6b7280", fontSize: "14px" }}>
-            You'll be taken to secure checkout. Report delivered to your email within minutes.
+            Pay securely on this page. Report delivered to your email within minutes.
           </div>
           <div style={{ textAlign: "center", marginTop: "8px", color: "#9ca3af", fontSize: "13px" }}>
             🔒 Secured by Stripe · No subscription · No account required
           </div>
         </form>
       </div>
+      )}
     </div>
   );
 }
