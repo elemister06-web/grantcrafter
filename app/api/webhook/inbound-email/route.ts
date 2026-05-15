@@ -1,12 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
+import Anthropic from "@anthropic-ai/sdk";
+import { Resend } from "resend";
 import { supabaseAdmin } from "@/lib/supabase";
 
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
+const resend = new Resend(process.env.RESEND_API_KEY!);
+
+async function sendTelegramAlert(message: string): Promise<void> {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_GROUP_ID;
+  if (!token || !chatId) return;
+  try {
+    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: chatId, text: message, parse_mode: "HTML" }),
+    });
+  } catch (err) {
+    console.error("Telegram alert failed:", err);
+  }
+}
+
+// This endpoint receives inbound email webhooks from Resend
+// Webhook URL: https://grantcrafter.com/api/webhook/inbound-email
 export async function POST(req: NextRequest) {
   let payload: {
     from?: string;
+    from_name?: string;
     subject?: string;
     text?: string;
     html?: string;
+    to?: string | string[];
   };
 
   try {
@@ -16,11 +40,28 @@ export async function POST(req: NextRequest) {
   }
 
   const fromEmail = payload.from || "unknown";
+  const fromName: string = payload.from_name || fromEmail.split("<")[0].trim() || "Customer";
   const subject = payload.subject || "(no subject)";
   const body = payload.text || payload.html?.replace(/<[^>]+>/g, " ").trim() || "";
   const excerpt = body.slice(0, 300);
+  const toEmail: string = Array.isArray(payload.to) ? (payload.to[0] || "") : (payload.to || "");
 
-  // Look up business name from report_orders
+  // ── Skip auto-replies to avoid loops ──────────────────────────────────
+  const subjectLower = subject.toLowerCase();
+  if (
+    subjectLower.includes("auto-reply") ||
+    subjectLower.includes("out of office") ||
+    subjectLower.includes("no-reply") ||
+    subjectLower.includes("noreply") ||
+    fromEmail.includes("noreply") ||
+    fromEmail.includes("no-reply")
+  ) {
+    return NextResponse.json({ received: true, skipped: "auto-reply" });
+  }
+
+  const isSupportEmail = toEmail.toLowerCase().includes("support@");
+
+  // ── Look up business name from report_orders ──────────────────────────
   let businessName = "Unknown";
   try {
     const emailMatch = fromEmail.match(/<(.+?)>/) || [null, fromEmail];
@@ -41,34 +82,68 @@ export async function POST(req: NextRequest) {
     // Not found — keep default
   }
 
-  // Send Telegram notification
-  const botToken = process.env.TELEGRAM_BOT_TOKEN;
-  const groupId = process.env.TELEGRAM_GROUP_ID;
+  // ── Always notify on Telegram ─────────────────────────────────────────
+  const telegramMsg = isSupportEmail
+    ? `📨 <b>Support Email — GrantCrafter</b>\n<b>From:</b> ${fromEmail}\n<b>Business:</b> ${businessName}\n<b>Subject:</b> ${subject}\n<b>Message:</b>\n${excerpt}${body.length > 300 ? "…" : ""}`
+    : `📬 <b>Customer Reply — GrantCrafter</b>\n<b>From:</b> ${fromEmail}\n<b>Business:</b> ${businessName}\n<b>Subject:</b> ${subject}\n<b>Message:</b>\n${excerpt}${body.length > 300 ? "…" : ""}`;
 
-  if (!botToken || !groupId) {
-    console.error("Missing TELEGRAM_BOT_TOKEN or TELEGRAM_GROUP_ID");
-    return NextResponse.json({ received: true, warning: "Telegram not configured" });
-  }
+  await sendTelegramAlert(telegramMsg);
 
-  const message = `📩 *Customer Reply — GrantCrafter*\n*From:* ${fromEmail}\n*Business:* ${businessName}\n*Subject:* ${subject}\n*Message:* ${excerpt}${body.length > 300 ? "…" : ""}`;
+  // ── If support@ email: run AI auto-reply ─────────────────────────────
+  if (isSupportEmail) {
+    try {
+      const bodyLower = (body + subject).toLowerCase();
+      const isRefundRequest = [
+        "refund", "money back", "cancel", "charge back", "chargeback",
+        "not satisfied", "not happy", "disappointed", "didn't work", "doesn't work",
+      ].some(kw => bodyLower.includes(kw));
 
-  const telegramRes = await fetch(
-    `https://api.telegram.org/bot${botToken}/sendMessage`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: groupId,
-        text: message,
-        parse_mode: "Markdown",
-      }),
+      let replyText: string;
+
+      if (isRefundRequest) {
+        replyText = `Hi ${fromName},\n\nThank you for reaching out. We're sorry the report didn't meet your expectations — we want to make this right.\n\nTo process your refund, please use our quick refund form here:\n\nhttps://www.grantcrafter.com/refund\n\nIt takes about 60 seconds. Your feedback also helps us improve the product for future customers, so we genuinely appreciate it.\n\nYour refund will be processed within 5–7 business days once submitted.\n\nThe GrantCrafter Team`;
+      } else {
+        const aiResponse = await anthropic.messages.create({
+          model: "claude-sonnet-4-6",
+          max_tokens: 1000,
+          messages: [
+            {
+              role: "user",
+              content: `You are a friendly, professional customer support agent for GrantCrafter (grantcrafter.com) — an AI-powered grant research service for small businesses. The service is $19.99 per report, one-time payment, no subscription or account required. Reports are delivered by email within 2-3 minutes of payment.\n\nA customer named "${fromName}" sent this support email:\n\nSubject: ${subject}\n\nMessage:\n${body}\n\nWrite a helpful, warm, and concise support reply. Key information:\n- GrantCrafter delivers up to 25 personalized grant opportunities matched to the customer's business profile\n- Report is delivered by email within 2-3 minutes of payment\n- 7-day money-back guarantee\n- We do NOT guarantee grant awards — we are a research/discovery service\n\nKeep your reply under 200 words. Be warm but professional. Sign off as "The GrantCrafter Team".\n\nDo not include a subject line — just write the email body.`,
+            },
+          ],
+        });
+        replyText = aiResponse.content[0].type === "text"
+          ? aiResponse.content[0].text
+          : "Thank you for reaching out! Our team will get back to you shortly.";
+      }
+
+      await resend.emails.send({
+        from: "GrantCrafter Support <support@grantcrafter.com>",
+        to: fromEmail,
+        replyTo: "support@grantcrafter.com",
+        subject: `Re: ${subject}`,
+        html: `
+<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:600px;color:#374151;line-height:1.6;font-size:15px;">
+  ${replyText.replace(/\n\n/g, "</p><p style='margin:0 0 12px;'>").replace(/\n/g, "<br>")}
+  <hr style="border:1px solid #e5e7eb;margin:24px 0;">
+  <p style="color:#9ca3af;font-size:12px;margin:0;">
+    GrantCrafter · AI-Powered Grant Discovery<br>
+    <a href="https://www.grantcrafter.com" style="color:#15803d;">grantcrafter.com</a> · 
+    <a href="https://www.grantcrafter.com/dashboard" style="color:#15803d;">Your Dashboard</a>
+  </p>
+</div>`,
+        text: replyText,
+      });
+
+      console.log(`GC support auto-reply sent: from=${fromEmail}, subject=${subject}`);
+      return NextResponse.json({ success: true, support: true, telegramNotified: true });
+    } catch (err) {
+      console.error("GC support auto-reply error:", err);
+      // Return success anyway — Telegram already notified, don't cause Resend retries
+      return NextResponse.json({ received: true, error: "auto_reply_failed", telegramNotified: true });
     }
-  );
-
-  if (!telegramRes.ok) {
-    const err = await telegramRes.text();
-    console.error("Telegram send failed:", err);
   }
 
-  return NextResponse.json({ received: true });
+  return NextResponse.json({ received: true, telegramNotified: true });
 }
