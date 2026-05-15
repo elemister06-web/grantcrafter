@@ -3,12 +3,13 @@
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect } from "react";
 import Logo from "@/components/Logo";
+import { detectSource } from "@/lib/trackSource";
 
 function trackEvent(event_type: string) {
   fetch("/api/track", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ tool: "grant-report", event_type }),
+    body: JSON.stringify({ tool: "grant-report", event_type, source: detectSource() }),
     keepalive: true,
   }).catch(() => {});
 }
