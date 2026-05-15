@@ -261,6 +261,16 @@ export async function POST(req: NextRequest) {
         .eq("id", orderId)
         .eq("status", "pending"); // only update if still pending (atomic guard)
 
+      // Cancel any scheduled abandoned-cart recovery email (customer paid in time).
+      if (order.recovery_email_id) {
+        try {
+          await resend.emails.cancel(order.recovery_email_id);
+        } catch (err) {
+          // Non-fatal — email may have already sent or been cancelled.
+          console.warn("Recovery email cancel failed:", err);
+        }
+      }
+
       // Build profile for prompt
       const profile = {
         businessName: order.business_name || "",

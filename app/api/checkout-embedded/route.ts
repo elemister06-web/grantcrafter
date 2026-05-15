@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { after } from "next/server";
+import { Resend } from "resend";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase";
+import { buildRecoveryEmail, getRecoveryEmailSubject } from "@/lib/abandoned-cart-email";
 
 export async function POST(req: NextRequest) {
   try {
@@ -69,6 +72,35 @@ export async function POST(req: NextRequest) {
       metadata: {
         order_id: order.id,
       },
+    });
+
+    // Schedule abandoned-cart recovery email for exactly 1 hour later.
+    // If the customer pays before then, the webhook will cancel this email.
+    after(async () => {
+      try {
+        const resend = new Resend(process.env.RESEND_API_KEY!);
+        const businessName = business_name || "your business";
+        const scheduledAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+        const { data, error: resendError } = await resend.emails.send({
+          from: process.env.RESEND_FROM_EMAIL || "reports@grantcrafter.com",
+          to: email,
+          subject: getRecoveryEmailSubject(businessName),
+          html: buildRecoveryEmail(businessName, appUrl),
+          scheduledAt,
+        });
+        if (resendError) {
+          console.error("Schedule recovery email error:", resendError);
+          return;
+        }
+        if (data?.id) {
+          await supabaseAdmin
+            .from("report_orders")
+            .update({ recovery_email_id: data.id })
+            .eq("id", order.id);
+        }
+      } catch (err) {
+        console.error("Failed to schedule recovery email:", err);
+      }
     });
 
     return NextResponse.json({
