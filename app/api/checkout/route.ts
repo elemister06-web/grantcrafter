@@ -54,6 +54,7 @@ export async function POST(req: NextRequest) {
     // Create Stripe Checkout session (one-time payment)
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
+      automatic_payment_methods: { enabled: true },
       line_items: [
         {
           price: process.env.STRIPE_REPORT_PRICE_ID!,
