@@ -261,6 +261,37 @@ export async function POST(req: NextRequest) {
         .eq("id", orderId)
         .eq("status", "pending"); // only update if still pending (atomic guard)
 
+      // ✨ Sale notification — Telegram ping for real customer sales
+      const TEST_EMAILS = ["elemister06@gmail.com", "ashley.adams@gmx.com"];
+      const customerEmail = (order.email || "").toLowerCase();
+      if (!TEST_EMAILS.includes(customerEmail)) {
+        try {
+          const { count } = await supabaseAdmin
+            .from("report_orders")
+            .select("id", { count: "exact", head: true })
+            .eq("status", "completed")
+            .not("email", "in", `(${TEST_EMAILS.map(e => `"${e}"`).join(",")})`)
+            .neq("id", orderId);
+
+          const isFirstSale = (count || 0) === 0;
+          const message = isFirstSale
+            ? `🎉🎉🎉 <b>FIRST SALE!</b> 🎉🎉🎉\n\nGrantCrafter just made its first real sale!\n\n<b>Business:</b> ${order.business_name || "—"}\n<b>Customer:</b> ${customerEmail}\n<b>Amount:</b> $19.99\n\nReport is being generated now — customer will get it in 2–3 minutes.\n\n🚀 Let's go!`
+            : `💰 <b>New Sale — GrantCrafter</b>\n\n<b>Business:</b> ${order.business_name || "—"}\n<b>Customer:</b> ${customerEmail}\n<b>Amount:</b> $19.99`;
+
+          const tgToken = process.env.TELEGRAM_BOT_TOKEN;
+          const tgChat = process.env.TELEGRAM_GROUP_ID;
+          if (tgToken && tgChat) {
+            await fetch(`https://api.telegram.org/bot${tgToken}/sendMessage`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ chat_id: tgChat, text: message, parse_mode: "HTML" }),
+            });
+          }
+        } catch (err) {
+          console.error("Sale alert failed:", err);
+        }
+      }
+
       // Cancel any scheduled abandoned-cart recovery email (customer paid in time).
       if (order.recovery_email_id) {
         try {
