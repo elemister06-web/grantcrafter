@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
     // Create Stripe Checkout session (one-time payment)
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
-      payment_method_types: ["card", "cashapp", "klarna", "amazon_pay"],
+      // payment_method_types: automatic — Link disabled at account level, Google Pay + Apple Pay show via express checkout
       line_items: [
         {
           price: process.env.STRIPE_REPORT_PRICE_ID!,
