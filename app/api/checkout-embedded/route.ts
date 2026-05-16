@@ -65,8 +65,11 @@ export async function POST(req: NextRequest) {
         },
       ],
       payment_intent_data: {
-        statement_descriptor: "GRANTCRAFTER",
-        description: "GrantCrafter - Business Grant Report",
+        // Statement descriptor on the customer's card statement.
+        // Max 22 chars; combined with the account-level shortened descriptor on issuer apps.
+        statement_descriptor: "GRANTCRAFTER.COM",
+        statement_descriptor_suffix: "GRANT REPORT",
+        description: "GrantCrafter — Business Grant Report",
       },
       return_url: `${appUrl}/thank-you?session_id={CHECKOUT_SESSION_ID}`,
       metadata: {
