@@ -79,9 +79,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ received: true, skipped: "not for this domain" });
   }
 
+  function prettyNameFromEmail(email: string): string {
+    const local = (email.split("@")[0] || "").replace(/[._\-]+/g, " ").trim();
+    if (!local) return "there";
+    return local.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
+  }
   const fromInfo = normalizeEmailField(payload.from || payload.sender);
   const fromEmail = fromInfo.email || "unknown";
-  const fromName: string = payload.from_name || fromInfo.name || fromEmail.split("@")[0] || "Customer";
+  const rawNameCandidate = payload.from_name || fromInfo.name || "";
+  const fromName: string = rawNameCandidate && !rawNameCandidate.includes("@")
+    ? rawNameCandidate.replace(/^"|"$/g, "").trim()
+    : prettyNameFromEmail(fromEmail);
   const subject: string = payload.subject || "(no subject)";
   // Prefer plain text. If only HTML exists, strip it cleanly so Claude can read the actual message.
   const rawText: string = payload.text || payload.plain || "";
