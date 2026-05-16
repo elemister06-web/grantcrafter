@@ -14,6 +14,7 @@ export function detectSource(): string {
   if (!ref) return "Direct";
   try {
     const domain = new URL(ref).hostname.replace("www.", "");
+    if (domain.includes("googlesyndication.") || domain.includes("doubleclick.")) return "Google Ads";
     if (domain.includes("google.")) return "Google Organic";
     if (domain.includes("facebook.") || domain.includes("instagram.")) return "Social";
     if (domain.includes("twitter.") || domain.includes("x.com")) return "Social";
