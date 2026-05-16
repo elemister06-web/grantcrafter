@@ -53,6 +53,10 @@ export async function POST(req: NextRequest) {
   }
   const payload = raw?.data && typeof raw.data === "object" ? raw.data : raw;
 
+  try {
+    console.log("GC inbound payload keys:", Object.keys(payload || {}), "hasText=", !!payload?.text, "hasHtml=", !!payload?.html, "textLen=", (payload?.text || "").length, "htmlLen=", (payload?.html || "").length);
+  } catch {}
+
   // Domain gate — only handle emails addressed to this site
   const toRawCheck = payload.to ?? payload.recipient ?? [];
   const toCheckStr = JSON.stringify(toRawCheck).toLowerCase();
@@ -64,7 +68,25 @@ export async function POST(req: NextRequest) {
   const fromEmail = fromInfo.email || "unknown";
   const fromName: string = payload.from_name || fromInfo.name || fromEmail.split("@")[0] || "Customer";
   const subject: string = payload.subject || "(no subject)";
-  const body: string = payload.text || (payload.html ? String(payload.html).replace(/<[^>]+>/g, " ").trim() : "") || payload.plain || "";
+  // Prefer plain text. If only HTML exists, strip it cleanly so Claude can read the actual message.
+  const rawText: string = payload.text || payload.plain || "";
+  const rawHtml: string = payload.html || "";
+  const htmlAsText: string = rawHtml
+    ? String(rawHtml)
+        .replace(/<style[\s\S]*?<\/style>/gi, "")
+        .replace(/<script[\s\S]*?<\/script>/gi, "")
+        .replace(/<br\s*\/?>/gi, "\n")
+        .replace(/<\/p>/gi, "\n\n")
+        .replace(/<[^>]+>/g, "")
+        .replace(/&nbsp;/g, " ")
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&quot;/g, '"')
+        .replace(/\n{3,}/g, "\n\n")
+        .trim()
+    : "";
+  const body: string = (rawText && rawText.trim().length > 0) ? rawText : htmlAsText;
   const excerpt = body.slice(0, 300);
   const toArr = payload.to ?? payload.recipient ?? [];
   const toFirst = Array.isArray(toArr) ? toArr[0] : toArr;
@@ -134,7 +156,7 @@ export async function POST(req: NextRequest) {
           messages: [
             {
               role: "user",
-              content: `You are a friendly, professional customer support agent for GrantCrafter (grantcrafter.com) — an AI-powered grant research service for small businesses. The service is $19.99 per report, one-time payment, no subscription or account required. Reports are delivered by email within 2-3 minutes of payment.\n\nA customer named "${fromName}" sent this support email:\n\nSubject: ${subject}\n\nMessage:\n${body}\n\nWrite a helpful, warm, and concise support reply. Key information:\n- GrantCrafter delivers up to 25 personalized grant opportunities matched to the customer's business profile\n- Report is delivered by email within 2-3 minutes of payment\n- 7-day money-back guarantee\n- We do NOT guarantee grant awards — we are a research/discovery service\n\nKeep your reply under 200 words. Be warm but professional. Sign off as "The GrantCrafter Team".\n\nDo not include a subject line — just write the email body.`,
+              content: `You are a friendly, professional customer support agent for GrantCrafter (grantcrafter.com) — an AI-powered grant research service for small businesses. The service is $19.99 per report, one-time payment, no subscription or account required. Reports are delivered by email within 2-3 minutes of payment.\n\nA customer named "${fromName}" sent this support email:\n\nSubject: ${subject}\n\nMessage:\n${body || "(no message body provided)"}\n\nProduct facts:\n- GrantCrafter delivers up to 25 personalized grant opportunities matched to the customer's business profile\n- Report is delivered by email within 2-3 minutes of payment\n- 7-day money-back guarantee\n- We do NOT guarantee grant awards — we are a research/discovery service\n\nImportant rules:\n- Keep your reply under 200 words\n- Write in plain text (NO markdown formatting, NO asterisks, NO bold, NO bullet points using "-" or "*")\n- If you want emphasis, use natural language only\n- Sign off as "The GrantCrafter Team"\n- Do not include a subject line\n- If the message body is empty or unclear, ask politely what they need help with rather than assuming\n- Always address the customer directly and respond to what they actually wrote`,
             },
           ],
         });
@@ -143,6 +165,19 @@ export async function POST(req: NextRequest) {
           : "Thank you for reaching out! Our team will get back to you shortly.";
       }
 
+      // Convert basic markdown -> HTML for the email body, and produce a clean plain-text version
+      const replyHtmlBody = replyText
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+        .replace(/(^|[\s])\*(?!\s)([^*\n]+?)\*(?=[\s.,!?]|$)/g, "$1<em>$2</em>")
+        .replace(/\n\n/g, "</p><p style='margin:0 0 12px;'>")
+        .replace(/\n/g, "<br>");
+      const replyTextClean = replyText
+        .replace(/\*\*(.+?)\*\*/g, "$1")
+        .replace(/(^|[\s])\*(?!\s)([^*\n]+?)\*(?=[\s.,!?]|$)/g, "$1$2");
+
       await resend.emails.send({
         from: "GrantCrafter Support <support@grantcrafter.com>",
         to: fromEmail,
@@ -150,18 +185,17 @@ export async function POST(req: NextRequest) {
         subject: `Re: ${subject}`,
         html: `
 <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:600px;color:#374151;line-height:1.6;font-size:15px;">
-  ${replyText.replace(/\n\n/g, "</p><p style='margin:0 0 12px;'>").replace(/\n/g, "<br>")}
+  <p style='margin:0 0 12px;'>${replyHtmlBody}</p>
   <hr style="border:1px solid #e5e7eb;margin:24px 0;">
   <p style="color:#9ca3af;font-size:12px;margin:0;">
     GrantCrafter · AI-Powered Grant Discovery<br>
-    <a href="https://www.grantcrafter.com" style="color:#15803d;">grantcrafter.com</a> · 
-    <a href="https://www.grantcrafter.com/dashboard" style="color:#15803d;">Your Dashboard</a>
+    <a href="https://www.grantcrafter.com" style="color:#15803d;">grantcrafter.com</a>
   </p>
 </div>`,
-        text: replyText,
+        text: replyTextClean,
       });
 
-      console.log(`GC support auto-reply sent: from=${fromEmail}, subject=${subject}`);
+      console.log(`GC support auto-reply sent: from=${fromEmail}, subject=${subject}, bodyLen=${body.length}`);
       return NextResponse.json({ success: true, support: true, telegramNotified: true });
     } catch (err) {
       console.error("GC support auto-reply error:", err);
