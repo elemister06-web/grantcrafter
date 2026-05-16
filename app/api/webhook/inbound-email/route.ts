@@ -53,6 +53,13 @@ export async function POST(req: NextRequest) {
   }
   const payload = raw?.data && typeof raw.data === "object" ? raw.data : raw;
 
+  // Domain gate — only handle emails addressed to this site
+  const toRawCheck = payload.to ?? payload.recipient ?? [];
+  const toCheckStr = JSON.stringify(toRawCheck).toLowerCase();
+  if (!toCheckStr.includes("grantcrafter.com")) {
+    return NextResponse.json({ received: true, skipped: "not for this domain" });
+  }
+
   const fromInfo = normalizeEmailField(payload.from || payload.sender);
   const fromEmail = fromInfo.email || "unknown";
   const fromName: string = payload.from_name || fromInfo.name || fromEmail.split("@")[0] || "Customer";
