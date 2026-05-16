@@ -51,11 +51,26 @@ export async function POST(req: NextRequest) {
   if (eventType && eventType !== "email.received") {
     return NextResponse.json({ received: true, skipped: `unsupported event ${eventType}` });
   }
-  const payload = raw?.data && typeof raw.data === "object" ? raw.data : raw;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let payload: any = raw?.data && typeof raw.data === "object" ? raw.data : raw;
 
-  try {
-    console.log("GC inbound payload keys:", Object.keys(payload || {}), "hasText=", !!payload?.text, "hasHtml=", !!payload?.html, "textLen=", (payload?.text || "").length, "htmlLen=", (payload?.html || "").length);
-  } catch {}
+  // Resend's webhook payload only contains metadata (email_id, from, to, subject).
+  // Fetch the full body via GET /emails/receiving/{id}.
+  if (payload?.email_id && (!payload.text || payload.text.length === 0)) {
+    try {
+      const fetchRes = await fetch(`https://api.resend.com/emails/receiving/${payload.email_id}`, {
+        headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}` },
+      });
+      if (fetchRes.ok) {
+        const full = await fetchRes.json();
+        payload = { ...payload, ...full };
+      } else {
+        console.warn("GC inbound: could not fetch full body", fetchRes.status);
+      }
+    } catch (err) {
+      console.error("GC inbound: fetch body failed", err);
+    }
+  }
 
   // Domain gate — only handle emails addressed to this site
   const toRawCheck = payload.to ?? payload.recipient ?? [];
