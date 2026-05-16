@@ -13,10 +13,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1.0,
     },
     {
-      url: `${BASE_URL}/signup`,
+      url: `${BASE_URL}/get-report`,
       lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.9,
+      changeFrequency: "weekly",
+      priority: 0.95,
+    },
+    {
+      url: `${BASE_URL}/refund`,
+      lastModified: now,
+      changeFrequency: "yearly",
+      priority: 0.3,
     },
     {
       url: `${BASE_URL}/privacy`,

@@ -387,6 +387,28 @@ function HomeContent() {
           </div>
         </div>
       </footer>
+
+      {/* Structured data — Service / Product schema for SEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Product",
+            name: "GrantCrafter — AI Small Business Grant Report",
+            description:
+              "AI-powered grant research that matches your small business to 15–25 real, currently-open grant opportunities. Delivered by email in minutes.",
+            brand: { "@type": "Brand", name: "GrantCrafter" },
+            offers: {
+              "@type": "Offer",
+              price: "19.99",
+              priceCurrency: "USD",
+              availability: "https://schema.org/InStock",
+              url: "https://www.grantcrafter.com/get-report",
+            },
+          }),
+        }}
+      />
     </div>
   );
 }
