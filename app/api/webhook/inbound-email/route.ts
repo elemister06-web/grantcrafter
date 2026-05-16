@@ -23,28 +23,46 @@ async function sendTelegramAlert(message: string): Promise<void> {
 
 // This endpoint receives inbound email webhooks from Resend
 // Webhook URL: https://grantcrafter.com/api/webhook/inbound-email
-export async function POST(req: NextRequest) {
-  let payload: {
-    from?: string;
-    from_name?: string;
-    subject?: string;
-    text?: string;
-    html?: string;
-    to?: string | string[];
-  };
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function normalizeEmailField(v: any): { email: string; name: string } {
+  if (!v) return { email: "", name: "" };
+  if (typeof v === "string") {
+    const m = v.match(/^\s*(.*?)\s*<(.+?)>\s*$/);
+    if (m) return { email: m[2], name: m[1] };
+    return { email: v, name: "" };
+  }
+  if (typeof v === "object") {
+    return { email: v.address || v.email || "", name: v.name || "" };
+  }
+  return { email: "", name: "" };
+}
 
+export async function POST(req: NextRequest) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let raw: any;
   try {
-    payload = await req.json();
+    raw = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const fromEmail = payload.from || "unknown";
-  const fromName: string = payload.from_name || fromEmail.split("<")[0].trim() || "Customer";
-  const subject = payload.subject || "(no subject)";
-  const body = payload.text || payload.html?.replace(/<[^>]+>/g, " ").trim() || "";
+  // Resend wraps inbound as { type: "email.received", data: {...} }
+  const eventType: string = raw?.type || "";
+  if (eventType && eventType !== "email.received") {
+    return NextResponse.json({ received: true, skipped: `unsupported event ${eventType}` });
+  }
+  const payload = raw?.data && typeof raw.data === "object" ? raw.data : raw;
+
+  const fromInfo = normalizeEmailField(payload.from || payload.sender);
+  const fromEmail = fromInfo.email || "unknown";
+  const fromName: string = payload.from_name || fromInfo.name || fromEmail.split("@")[0] || "Customer";
+  const subject: string = payload.subject || "(no subject)";
+  const body: string = payload.text || (payload.html ? String(payload.html).replace(/<[^>]+>/g, " ").trim() : "") || payload.plain || "";
   const excerpt = body.slice(0, 300);
-  const toEmail: string = Array.isArray(payload.to) ? (payload.to[0] || "") : (payload.to || "");
+  const toArr = payload.to ?? payload.recipient ?? [];
+  const toFirst = Array.isArray(toArr) ? toArr[0] : toArr;
+  const toInfo = normalizeEmailField(toFirst);
+  const toEmail: string = toInfo.email;
 
   // ── Skip auto-replies to avoid loops ──────────────────────────────────
   const subjectLower = subject.toLowerCase();
