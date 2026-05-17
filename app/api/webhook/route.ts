@@ -261,6 +261,21 @@ export async function POST(req: NextRequest) {
         .eq("id", orderId)
         .eq("status", "pending"); // only update if still pending (atomic guard)
 
+      // Send confirmation/receipt email immediately — before report generates
+      try {
+        const businessName = order.business_name || "your business";
+        const amountDisplay = `$${((order.amount_cents || 1999) / 100).toFixed(2)}`;
+        const shortId = (order.id as string).slice(0, 8).toUpperCase();
+        await resend.emails.send({
+          from: process.env.RESEND_FROM_EMAIL || "GrantCrafter <reports@grantcrafter.com>",
+          to: order.email,
+          subject: `Order confirmed — Grant Report for ${businessName}`,
+          html: buildGCConfirmationEmail(businessName, amountDisplay, shortId, order.email),
+        });
+      } catch (err) {
+        console.error("GC confirmation email failed:", err);
+      }
+
       // Cancel any scheduled abandoned-cart recovery email (customer paid in time).
       if (order.recovery_email_id) {
         try {
@@ -335,4 +350,50 @@ export async function POST(req: NextRequest) {
     console.error("Webhook handler error:", err);
     return NextResponse.json({ error: "Handler failed" }, { status: 500 });
   }
+}
+
+function buildGCConfirmationEmail(businessName: string, amount: string, orderId: string, email: string): string {
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
+<div style="max-width:560px;margin:0 auto;">
+
+  <div style="background:linear-gradient(135deg,#1a6b3c 0%,#134d2c 100%);padding:36px 40px;text-align:center;">
+    <p style="color:#fbbf24;font-size:11px;font-weight:800;letter-spacing:0.22em;text-transform:uppercase;margin:0 0 10px;">GrantCrafter</p>
+    <h1 style="color:#ffffff;font-size:24px;font-weight:900;margin:0 0 6px;">Order Confirmed</h1>
+    <p style="color:rgba(255,255,255,0.75);font-size:14px;margin:0;">Your grant report is on its way &mdash; you&apos;ll receive it momentarily.</p>
+  </div>
+
+  <div style="background:#ffffff;padding:32px 40px;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;">
+      <tr style="background:#f8fafc;">
+        <td style="padding:12px 16px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.1em;">Item</td>
+        <td style="padding:12px 16px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.1em;text-align:right;">Amount</td>
+      </tr>
+      <tr style="border-top:1px solid #e5e7eb;">
+        <td style="padding:14px 16px;font-size:14px;color:#1e293b;font-weight:600;">Grant Report &mdash; ${businessName}</td>
+        <td style="padding:14px 16px;font-size:14px;color:#1a6b3c;font-weight:800;text-align:right;">${amount}</td>
+      </tr>
+      <tr style="background:#f8fafc;border-top:1px solid #e5e7eb;">
+        <td style="padding:10px 16px;font-size:12px;color:#6b7280;">Order ID</td>
+        <td style="padding:10px 16px;font-size:12px;color:#6b7280;text-align:right;font-family:monospace;">#${orderId}</td>
+      </tr>
+      <tr style="border-top:1px solid #e5e7eb;">
+        <td style="padding:10px 16px;font-size:12px;color:#6b7280;">Delivered to</td>
+        <td style="padding:10px 16px;font-size:12px;color:#6b7280;text-align:right;">${email}</td>
+      </tr>
+    </table>
+
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:16px 20px;margin-top:24px;">
+      <p style="color:#166534;font-size:14px;font-weight:700;margin:0 0 4px;">&#9989; Your grant report is generating now</p>
+      <p style="color:#166534;font-size:13px;margin:0;">You&apos;ll receive your personalized grant matches and application guidance momentarily at <strong>${email}</strong>. Check your spam folder if it doesn&apos;t arrive.</p>
+    </div>
+  </div>
+
+  <div style="background:#0f172a;padding:20px 40px;text-align:center;">
+    <p style="color:#94a3b8;font-size:11px;margin:0 0 6px;">Questions? Reply to your report email and we&apos;ll sort it out.</p>
+    <p style="color:#475569;font-size:11px;margin:0;">7-day money-back guarantee &middot; <a href="https://www.grantcrafter.com" style="color:#16a34a;">grantcrafter.com</a></p>
+  </div>
+
+</div>
+</body></html>`;
 }
